@@ -9,11 +9,13 @@
   "scripts": {
     "start": "node --env-file-if-exists .env src/index.ts",
     "dev": "node --env-file-if-exists .env --watch src/index.ts",
+    "build": "node --env-file-if-exists .env build.ts",
     "test": "node --test test",
     "typecheck": "tsgo"
   },
   "devDependencies": {
     "@types/node": "^24.12.4",
-    "@typescript/native-preview": "^7.0.0-dev.20260513.1"
+    "@typescript/native-preview": "^7.0.0-dev.20260513.1",
+    "esbuild": "^0.28.0"
   }
 }
