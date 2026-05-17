@@ -6,6 +6,7 @@ import html, {
   requireBasicAuth,
 } from "./utils.ts";
 import { ApiClient } from "./apiClient.ts";
+import type { Service, TimeEntry } from "../mite.js";
 
 const { MITE_API_KEY, MITE_ACCOUNT_NAME } = process.env;
 
@@ -21,6 +22,78 @@ const apiClient = new ApiClient({
   apiKey: MITE_API_KEY,
   accountName: MITE_ACCOUNT_NAME,
 });
+
+const renderEntry = ({
+  services,
+  entry,
+}: {
+  services: Service[];
+  entry?: TimeEntry;
+}) => {
+  return html` <form
+      action="/${entry ? "edit" : "add"}"
+      method="POST"
+      class="entry-form"
+    >
+      ${entry
+        ? html`<input type="hidden" name="timeEntry" value="${entry.id}" />`
+        : ""}
+      <div class="grid">
+        <div class="field field--service">
+          <label for="service" class="visually-hidden">Service</label>
+          <input
+            type="text"
+            name="service"
+            id="service"
+            required
+            list="services"
+            placeholder="Service"
+            value="${entry?.service_name ?? ""}"
+          />
+          <datalist id="services">
+            ${services
+              .map(
+                (service) =>
+                  html`<option value="${service.id}">${service.name}</option>`
+              )
+              .join("")}
+          </datalist>
+        </div>
+        <div class="field field--minutes">
+          <label for="minutes" class="visually-hidden">Minutes</label>
+          <input
+            type="number"
+            name="minutes"
+            id="minutes"
+            placeholder="Minutes"
+            value="${entry?.minutes ?? ""}"
+          />
+        </div>
+        <div class="field field--note">
+          <label for="note" class="visually-hidden">Note</label>
+          <input
+            type="text"
+            name="note"
+            id="note"
+            placeholder="Note"
+            value="${entry?.note ?? ""}"
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="visually-hidden">
+        ${entry ? "Save" : "Add"}
+      </button>
+    </form>
+    ${entry
+      ? html`<form action="/toggle" method="POST" class="toggle-form">
+          <input type="hidden" name="timeEntry" value="${entry.id}" />
+          <button type="submit" aria-pressed="${!!entry.tracking}">
+            ${!!entry.tracking ? "⏸️" : "▶️"}
+          </button>
+        </form>`
+      : ""}`;
+};
 
 createServer(async (req, res) => {
   requireBasicAuth(req, res, async () => {
@@ -119,9 +192,12 @@ createServer(async (req, res) => {
             />
             <title>Mite Client</title>
             <style>
-              .visually-hidden:not(:focus) {
+              .visually-hidden {
                 position: absolute;
-                clip: rect(0 0 0 0);
+
+                &:not(:focus) {
+                  clip: rect(0 0 0 0);
+                }
               }
 
               input,
@@ -135,160 +211,91 @@ createServer(async (req, res) => {
                 box-sizing: border-box;
               }
 
+              [role="list"] {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+              }
+
               body {
                 font-family: sans-serif;
                 margin: 0.5rem;
               }
 
-              .add {
+              .grid {
                 display: grid;
-                grid-template-columns: auto 5rem;
+                grid-template-columns: auto 7rem 3rem;
                 gap: 0.5rem;
+
+                .grid {
+                  display: contents;
+                }
+              }
+
+              .entry-form {
+                position: relative;
                 margin-block-end: 2rem;
+
+                .field--minutes {
+                  grid-column: 2 / -1;
+                }
 
                 .field--note {
                   grid-column: 1 / -1;
                 }
+
+                button[type="submit"] {
+                  inset: 0;
+                  inset-inline-start: auto;
+                  width: auto;
+                }
               }
 
-              .fields {
-                display: grid;
-                grid-template-columns: auto max-content;
-                gap: 0.5rem;
+              .entries {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
               }
 
-              .field--minutes {
-                width: 7rem;
-              }
+              .entry {
+                position: relative;
 
-              dl {
-                display: grid;
-                grid-template-columns: max-content 1fr;
-                gap: 0.5rem;
-                align-items: center;
-              }
+                .entry-form {
+                  display: contents;
+                }
 
-              .edit {
-                display: grid;
-                grid-template-columns: auto max-content max-content;
-                gap: 0.5rem;
-              }
+                .field--minutes {
+                  grid-column: 2;
+                }
 
-              .time-entry {
-                display: grid;
-                grid-template-columns: auto 5rem;
-                align-items: center;
-                /* gap: 0.5rem; */
+                .toggle-form {
+                  grid-row: 1;
+                  grid-column: 3;
+                  display: flex;
+
+                  button[type="submit"] {
+                    padding-block: 0;
+                  }
+                }
               }
             </style>
           </head>
           <body>
-            <form action="/add" method="POST" class="add">
-              <div class="fields">
-                <div class="field field--service">
-                  <label for="service" class="visually-hidden">Service</label>
-                  <input
-                    type="text"
-                    name="service"
-                    id="service"
-                    required
-                    list="services"
-                    placeholder="Service"
-                  />
-                  <datalist id="services">
-                    ${services
-                      .map(
-                        ({ service }) =>
-                          html`<option value="${service.id}">
-                            ${service.name}
-                          </option>`
-                      )
-                      .join("")}
-                  </datalist>
-                </div>
-                <div class="field field--minutes">
-                  <label for="minutes" class="visually-hidden">Minutes</label>
-                  <input
-                    type="number"
-                    name="minutes"
-                    id="minutes"
-                    placeholder="Minutes"
-                  />
-                </div>
-                <div class="field field--note">
-                  <label for="note" class="visually-hidden">Note</label>
-                  <input type="text" name="note" id="note" placeholder="Note" />
-                </div>
-              </div>
+            ${renderEntry({ services: services.map(({ service }) => service) })}
 
-              <button type="submit" class="visually-hidden2">Add</button>
-            </form>
-
-            <dl>
+            <ul role="list" class="entries">
               ${timeEntriesToday
                 .map(
                   ({ time_entry }) =>
-                    html`<dt>${time_entry.service_name}</dt>
-                      <dd>
-                        <div class="time-entry">
-                          <form action="/edit" method="POST" class="edit">
-                            <input
-                              type="hidden"
-                              name="timeEntry"
-                              value="${time_entry.id}"
-                            />
-                            <div class="fields">
-                              <div class="field field--note">
-                                <label
-                                  for="timeEntry-${time_entry.id}-note"
-                                  class="visually-hidden"
-                                  >Note</label
-                                >
-                                <input
-                                  id="timeEntry-${time_entry.id}-note"
-                                  type="text"
-                                  name="note"
-                                  value="${time_entry.note}"
-                                  placeholder="Note"
-                                />
-                              </div>
-                              <div class="field field--minutes">
-                                <label
-                                  for="timeEntry-${time_entry.id}-minutes"
-                                  class="visually-hidden"
-                                  >Minutes</label
-                                >
-                                <input
-                                  id="timeEntry-${time_entry.id}-minutes"
-                                  type="number"
-                                  name="minutes"
-                                  value="${time_entry.minutes}"
-                                  placeholder="Minutes"
-                                />
-                              </div>
-                            </div>
-                            <button type="submit" class="visually-hidden2">
-                              Save
-                            </button>
-                          </form>
-                          <form action="/toggle" method="POST" class="toggle">
-                            <input
-                              type="hidden"
-                              name="timeEntry"
-                              value="${time_entry.id}"
-                            />
-                            <button
-                              type="submit"
-                              aria-pressed="${!!time_entry.tracking}"
-                            >
-                              ${!!time_entry.tracking ? "⏸️" : "▶️"}
-                            </button>
-                          </form>
-                        </div>
-                      </dd>`
+                    html`<li class="entry grid">
+                      ${renderEntry({
+                        services: services.map(({ service }) => service),
+                        entry: time_entry,
+                      })}
+                    </li>`
                 )
                 .join("")}
-            </dl>
+            </ul>
           </body>
         </html>`
     );
