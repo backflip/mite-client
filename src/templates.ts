@@ -134,6 +134,41 @@ const styles = html`<style>
   }
 </style>`;
 
+const scripts = html`<script>
+  document.addEventListener("keydown", (event) => {
+    if (event.target.matches("input, textarea, select")) {
+      return;
+    }
+
+    switch (event.key) {
+      case "h":
+        const homeLink = document.querySelector(".link--home");
+
+        if (homeLink) {
+          homeLink.click();
+        }
+
+        break;
+      case "ArrowLeft":
+        const prevLink = document.querySelector(".link--prev");
+
+        if (prevLink) {
+          prevLink.click();
+        }
+
+        break;
+      case "ArrowRight":
+        const nextLink = document.querySelector(".link--next");
+
+        if (nextLink) {
+          nextLink.click();
+        }
+
+        break;
+    }
+  });
+</script>`;
+
 const Icon = ({ icon, label }: { icon: string; label: string }) => {
   const id = randomUUID();
 
@@ -146,11 +181,13 @@ const Entry = ({
   services,
   entry,
   date,
+  autoFocus,
 }: {
   routes: Routes;
   services: Service[];
   date: string;
   entry?: TimeEntry;
+  autoFocus?: boolean;
 }) => {
   return html`<form
       action="${entry ? routes.edit.path : routes.add.path}"
@@ -172,6 +209,7 @@ const Entry = ({
           list="services"
           placeholder="Service"
           value="${entry?.service_name ?? ""}"
+          ${autoFocus ? "autofocus" : ""}
         />
         <datalist id="services">
           ${services
@@ -261,21 +299,27 @@ export const Page = ({
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${title}</title>
-        ${styles}
+        ${styles} ${scripts}
       </head>
       <body>
         <header>
-          <a href="${prevUrl}"
+          <a href="${prevUrl}" class="link link--prev"
             >${Icon({ icon: "⬅️", label: "Previous day" })}</a
           >
           <h1>
             ${date}${total ? html` <span>(${formatMinutes(total)})</span>` : ""}
           </h1>
-          <a href="/">${Icon({ icon: "🏠", label: "Home" })}</a>
-          <a href="${nextUrl}">${Icon({ icon: "➡️", label: "Next day" })}</a>
+          <a href="/" class="link link--home"
+            >${Icon({ icon: "🏠", label: "Home" })}</a
+          >
+          <a href="${nextUrl}" class="link link--next"
+            >${Icon({ icon: "➡️", label: "Next day" })}</a
+          >
         </header>
 
-        <div class="add">${Entry({ services, routes, date })}</div>
+        <div class="add">
+          ${Entry({ services, routes, date, autoFocus: true })}
+        </div>
 
         <ul role="list" class="entries">
           ${timeEntries
