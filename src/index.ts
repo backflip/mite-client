@@ -1,4 +1,4 @@
-import { createServer } from "node:http";
+import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import {
   handleError,
   handleRedirect,
@@ -7,6 +7,7 @@ import {
 } from "./utils.ts";
 import { ApiClient } from "./apiClient.ts";
 import { renderPage } from "./templates.ts";
+import type { Routes } from "../types.js";
 
 const { MITE_API_KEY, MITE_ACCOUNT_NAME } = process.env;
 
@@ -23,99 +24,120 @@ const apiClient = new ApiClient({
   accountName: MITE_ACCOUNT_NAME,
 });
 
-createServer(async (req, res) => {
-  requireBasicAuth(req, res, async () => {
-    switch (req.url) {
-      case "/add": {
-        if (req.method !== "POST") {
-          return handleError(res, new Error("Method Not Allowed"));
-        }
+const routes: Routes = {
+  root: {
+    path: "/",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      const [services, timeEntriesToday] = await Promise.all([
+        apiClient.getServices(),
+        apiClient.getTimeEntriesToday(),
+      ]);
 
-        const params = await parseBody(req);
-        const service = params.get("service");
+      const page = renderPage({
+        title: "Mite Client",
+        routes,
+        services: services.map(({ service }) => service),
+        timeEntriesToday: timeEntriesToday.map(({ time_entry }) => time_entry),
+      });
 
-        if (!service) {
-          return handleError(res, new Error("Missing service"));
-        }
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(page);
+    },
+  },
+  add: {
+    path: "/add",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      if (req.method !== "POST") {
+        return handleError(res, new Error("Method Not Allowed"));
+      }
 
-        const services = await apiClient.getServices();
-        const matchedService = services.find(
-          ({ service: item }) => item.id === Number(service)
-        );
+      const params = await parseBody(req);
+      const service = params.get("service");
 
-        if (!matchedService) {
-          return handleError(res, new Error("Service not found"));
-        }
+      if (!service) {
+        return handleError(res, new Error("Missing service"));
+      }
 
-        const minutes = params.get("minutes");
-        const note = params.get("note");
+      const services = await apiClient.getServices();
+      const matchedService = services.find(
+        ({ service: item }) => item.id === Number(service)
+      );
 
-        await apiClient.addTimeEntry({
-          serviceId: matchedService.service.id,
-          minutes: minutes ? Number(minutes) : 0,
+      if (!matchedService) {
+        return handleError(res, new Error("Service not found"));
+      }
+
+      const minutes = params.get("minutes");
+      const note = params.get("note");
+
+      await apiClient.addTimeEntry({
+        serviceId: matchedService.service.id,
+        minutes: minutes ? Number(minutes) : 0,
+        note,
+      });
+
+      return handleRedirect(res, "/");
+    },
+  },
+  edit: {
+    path: "/edit",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      if (req.method !== "POST") {
+        return handleError(res, new Error("Method Not Allowed"));
+      }
+
+      const params = await parseBody(req);
+      const timeEntryId = params.get("timeEntry");
+
+      if (!timeEntryId) {
+        return handleError(res, new Error("Missing time entry"));
+      }
+
+      const note = params.get("note");
+
+      try {
+        await apiClient.editTimeEntry({
+          timeEntryId: Number(timeEntryId),
           note,
         });
-
-        return handleRedirect(res, "/");
+      } catch (error: any) {
+        return handleError(res, error);
       }
 
-      case "/edit": {
-        if (req.method !== "POST") {
-          return handleError(res, new Error("Method Not Allowed"));
-        }
-
-        const params = await parseBody(req);
-        const timeEntryId = params.get("timeEntry");
-
-        if (!timeEntryId) {
-          return handleError(res, new Error("Missing time entry"));
-        }
-
-        const note = params.get("note");
-
-        try {
-          await apiClient.editTimeEntry({
-            timeEntryId: Number(timeEntryId),
-            note,
-          });
-        } catch (error: any) {
-          return handleError(res, error);
-        }
-
-        return handleRedirect(res, "/");
+      return handleRedirect(res, "/");
+    },
+  },
+  toggle: {
+    path: "/toggle",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      if (req.method !== "POST") {
+        return handleError(res, new Error("Method Not Allowed"));
       }
 
-      case "/toggle": {
-        if (req.method !== "POST") {
-          return handleError(res, new Error("Method Not Allowed"));
-        }
+      const params = await parseBody(req);
+      const timeEntryId = params.get("timeEntry");
 
-        const params = await parseBody(req);
-        const timeEntryId = params.get("timeEntry");
+      if (!timeEntryId) {
+        return handleError(res, new Error("Missing time entry"));
+      }
 
-        if (!timeEntryId) {
-          return handleError(res, new Error("Missing time entry"));
-        }
+      await apiClient.toggleTimeEntry({ timeEntryId: Number(timeEntryId) });
 
-        await apiClient.toggleTimeEntry({ timeEntryId: Number(timeEntryId) });
+      return handleRedirect(res, "/");
+    },
+  },
+};
 
-        return handleRedirect(res, "/");
+createServer(async (req, res) => {
+  requireBasicAuth(req, res, async () => {
+    for (const route of Object.values(routes)) {
+      if (req.url === route.path) {
+        return route.handler(req, res);
       }
     }
 
-    const [services, timeEntriesToday] = await Promise.all([
-      apiClient.getServices(),
-      apiClient.getTimeEntriesToday(),
-    ]);
-
-    const page = renderPage({
-      title: "Mite Client",
-      services: services.map(({ service }) => service),
-      timeEntriesToday: timeEntriesToday.map(({ time_entry }) => time_entry),
-    });
-
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(page);
+    res.writeHead(404, { "Content-Type": "text/html" });
+    res.end("Not Found");
   });
 }).listen(3000, () => {
   console.log("Server running at http://localhost:3000/");

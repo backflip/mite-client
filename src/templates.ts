@@ -1,4 +1,5 @@
 import type { Service, TimeEntry } from "../mite.js";
+import type { Routes } from "../types.js";
 
 /**
  * Allow for syntax highlighting in template strings
@@ -102,14 +103,16 @@ const styles = html`<style>
 </style>`;
 
 const renderEntry = ({
+  routes,
   services,
   entry,
 }: {
+  routes: Routes;
   services: Service[];
   entry?: TimeEntry;
 }) => {
   return html` <form
-      action="/${entry ? "edit" : "add"}"
+      action="${entry ? routes.edit?.path : routes.add?.path}"
       method="POST"
       class="entry-form"
     >
@@ -164,7 +167,11 @@ const renderEntry = ({
       </button>
     </form>
     ${entry
-      ? html`<form action="/toggle" method="POST" class="toggle-form">
+      ? html`<form
+          action="${routes.toggle?.path}"
+          method="POST"
+          class="toggle-form"
+        >
           <input type="hidden" name="timeEntry" value="${entry.id}" />
           <button type="submit" aria-pressed="${!!entry.tracking}">
             ${!!entry.tracking ? "⏸️" : "▶️"}
@@ -175,10 +182,12 @@ const renderEntry = ({
 
 export const renderPage = ({
   title,
+  routes,
   services,
   timeEntriesToday,
 }: {
   title: string;
+  routes: Routes;
   services: Service[];
   timeEntriesToday: TimeEntry[];
 }) => {
@@ -191,7 +200,7 @@ export const renderPage = ({
         ${styles}
       </head>
       <body>
-        ${renderEntry({ services })}
+        ${renderEntry({ services, routes })}
 
         <ul role="list" class="entries">
           ${timeEntriesToday
@@ -199,6 +208,7 @@ export const renderPage = ({
               (entry) =>
                 html`<li class="entry grid">
                   ${renderEntry({
+                    routes,
                     services,
                     entry,
                   })}
