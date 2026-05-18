@@ -92,8 +92,8 @@ const styles = html`<style>
     flex-direction: column;
     gap: 1rem;
 
-    .entry-form {
-      margin-block-end: 0;
+    form {
+      display: contents;
     }
 
     .field--minutes {
@@ -105,6 +105,8 @@ const styles = html`<style>
 
     .action--toggle {
       background: transparent;
+      grid-row: 1;
+      grid-column: 4;
     }
     .action--delete {
       background: rgba(200, 0, 0, 0.1);
@@ -131,84 +133,84 @@ const Entry = ({
   entry?: TimeEntry;
 }) => {
   return html`<form
-    action="${entry ? routes.edit.path : routes.add.path}"
-    method="POST"
-    class="entry-form grid"
-  >
-    <input type="hidden" name="date" value="${date}" />
-    ${entry
-      ? html`<input type="hidden" name="timeEntry" value="${entry.id}" />`
-      : ""}
-
-    <div class="field field--service">
-      <label for="service" class="visually-hidden">Service</label>
-      <input
-        type="text"
-        name="service"
-        id="service"
-        required
-        list="services"
-        placeholder="Service"
-        value="${entry?.service_name ?? ""}"
-      />
-      <datalist id="services">
-        ${services
-          .map(
-            (service) =>
-              html`<option value="${service.id}">${service.name}</option>`
-          )
-          .join("")}
-      </datalist>
-    </div>
-    <div class="field field--minutes">
-      <label for="minutes" class="visually-hidden">Minutes</label>
-      <input
-        type="number"
-        name="minutes"
-        id="minutes"
-        placeholder="Minutes"
-        value="${entry?.minutes ?? ""}"
-      />
-    </div>
-    ${entry
-      ? html`<button
-          type="submit"
-          class="action action--toggle"
-          formaction="${routes.toggle.path}"
-          aria-pressed="${!!entry.tracking}"
-        >
-          ${!!entry.tracking
-            ? Icon({ icon: "⏸️", label: "Pause" })
-            : Icon({ icon: "▶️", label: "Play" })}
-        </button>`
-      : ""}
-    <div class="field field--note">
-      <label for="note" class="visually-hidden">Note</label>
-      <input
-        type="text"
-        name="note"
-        id="note"
-        placeholder="Note"
-        value="${entry?.note ?? ""}"
-      />
-    </div>
-
-    ${entry
-      ? html`<button
-          type="submit"
-          class="action action--delete"
-          formaction="${routes.delete.path}"
-        >
-          ${Icon({ icon: "🗑️", label: "Delete" })}
-        </button>`
-      : ""}
-
-    <button type="submit">
+      action="${entry ? routes.edit.path : routes.add.path}"
+      method="POST"
+      class="entry-form grid"
+    >
+      <input type="hidden" name="date" value="${date}" />
       ${entry
-        ? Icon({ icon: "💾", label: "Save" })
-        : Icon({ icon: "➕", label: "Add" })}
-    </button>
-  </form>`;
+        ? html`<input type="hidden" name="timeEntry" value="${entry.id}" />`
+        : ""}
+
+      <div class="field field--service">
+        <label for="service" class="visually-hidden">Service</label>
+        <input
+          type="text"
+          name="service"
+          id="service"
+          required
+          list="services"
+          placeholder="Service"
+          value="${entry?.service_name ?? ""}"
+        />
+        <datalist id="services">
+          ${services
+            .map(
+              (service) =>
+                html`<option value="${service.id}">${service.name}</option>`
+            )
+            .join("")}
+        </datalist>
+      </div>
+      <div class="field field--minutes">
+        <label for="minutes" class="visually-hidden">Minutes</label>
+        <input
+          type="number"
+          name="minutes"
+          id="minutes"
+          placeholder="Minutes"
+          value="${entry?.minutes ?? ""}"
+        />
+      </div>
+      <div class="field field--note">
+        <label for="note" class="visually-hidden">Note</label>
+        <input
+          type="text"
+          name="note"
+          id="note"
+          placeholder="Note"
+          value="${entry?.note ?? ""}"
+        />
+      </div>
+
+      <button type="submit">
+        ${entry
+          ? Icon({ icon: "💾", label: "Save" })
+          : Icon({ icon: "➕", label: "Add" })}
+      </button>
+    </form>
+    ${entry
+      ? html`<form action="${routes.toggle.path}" method="POST">
+            <input type="hidden" name="date" value="${date}" />
+            <input type="hidden" name="timeEntry" value="${entry.id}" />
+            <button
+              type="submit"
+              class="action action--toggle"
+              aria-pressed="${!!entry.tracking}"
+            >
+              ${!!entry.tracking
+                ? Icon({ icon: "⏸️", label: "Pause" })
+                : Icon({ icon: "▶️", label: "Play" })}
+            </button>
+          </form>
+          <form action="${routes.delete.path}" method="POST">
+            <input type="hidden" name="date" value="${date}" />
+            <input type="hidden" name="timeEntry" value="${entry.id}" />
+            <button type="submit" class="action action--delete">
+              ${Icon({ icon: "🗑️", label: "Delete" })}
+            </button>
+          </form>`
+      : ""}`;
 };
 
 export const Page = ({
@@ -251,7 +253,7 @@ export const Page = ({
           ${timeEntries
             .map(
               (entry) =>
-                html`<li>
+                html`<li class="grid">
                   ${Entry({
                     routes,
                     services,
