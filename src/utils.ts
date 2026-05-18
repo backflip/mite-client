@@ -17,10 +17,7 @@ export const handleError = (res: ServerResponse, error: Error) => {
   res.end(error.message);
 };
 
-export const handleRootRedirect = (
-  res: ServerResponse,
-  date?: string
-) => {
+export const handleRootRedirect = (res: ServerResponse, date?: string) => {
   let location = "/";
 
   if (date && date !== "today") {
@@ -74,4 +71,8 @@ export const getPreviousDay = (date?: string) => {
   prevDate.setDate(prevDate.getDate() - 1);
 
   return String(prevDate.toISOString().split("T")[0]);
+};
+
+export const formatMinutes = (minutes: number) => {
+  return `${Math.floor(minutes / 60)}:${minutes % 60}`;
 };

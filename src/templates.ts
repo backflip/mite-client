@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Service, TimeEntry } from "../mite.js";
 import type { Routes } from "../types.js";
+import { formatMinutes } from "./utils.ts";
 
 /**
  * Allow for syntax highlighting in template strings
@@ -267,7 +268,9 @@ export const Page = ({
           <a href="${prevUrl}"
             >${Icon({ icon: "⬅️", label: "Previous day" })}</a
           >
-          <h1>${date}${total ? html` <span>(${total} min)</span>` : ""}</h1>
+          <h1>
+            ${date}${total ? html` <span>(${formatMinutes(total)})</span>` : ""}
+          </h1>
           <a href="/">${Icon({ icon: "🏠", label: "Home" })}</a>
           <a href="${nextUrl}">${Icon({ icon: "➡️", label: "Next day" })}</a>
         </header>
