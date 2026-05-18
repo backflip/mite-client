@@ -15,6 +15,14 @@ export default function html(
 }
 
 const styles = html`<style>
+  :root {
+    --page-padding: 0.5rem;
+
+    @media (min-width: 40rem) {
+      --page-padding: 1rem;
+    }
+  }
+
   .visually-hidden {
     position: absolute;
 
@@ -50,16 +58,18 @@ const styles = html`<style>
 
   body {
     font-family: sans-serif;
-    margin: 0.5rem;
+    padding: var(--page-padding);
+    margin: 0;
   }
 
   header {
     display: flex;
     align-items: end;
     gap: 0.5rem;
-    margin-block-end: 2rem;
+    margin-block-end: calc(2 * var(--page-padding));
 
     h1 {
+      flex: 1;
       margin-block: 0;
       font-size: 1.25rem;
 
@@ -79,15 +89,20 @@ const styles = html`<style>
     }
   }
 
-  .entry-form {
-    margin-block-end: 2rem;
+  .add {
+    background: rgba(0, 0, 0, 0.1);
+    margin: calc(-1 * var(--page-padding));
+    margin-block-end: 1rem;
+    padding: var(--page-padding);
+  }
 
+  .entry-form {
     .field--minutes {
-      grid-column: 2 / -1;
+      grid-column: 2 / 4;
     }
 
     .field--note {
-      grid-column: 1 / 4;
+      grid-column: 1 / 3;
     }
   }
 
@@ -100,13 +115,6 @@ const styles = html`<style>
       display: contents;
     }
 
-    .field--minutes {
-      grid-column: 2 / 4;
-    }
-    .field--note {
-      grid-column: 1 / 3;
-    }
-
     .action--toggle {
       background: transparent;
       grid-row: 1;
@@ -114,6 +122,13 @@ const styles = html`<style>
     }
     .action--delete {
       background: rgba(200, 0, 0, 0.1);
+    }
+
+    .entry:has(.action--toggle[aria-pressed="true"]) {
+      .field--minutes input,
+      .action--toggle {
+        background: rgba(0, 0, 200, 0.1);
+      }
     }
   }
 </style>`;
@@ -173,7 +188,7 @@ const Entry = ({
           name="minutes"
           id="minutes"
           placeholder="Minutes"
-          value="${entry?.minutes ?? ""}"
+          value="${entry?.tracking?.minutes || entry?.minutes || ""}"
         />
       </div>
       <div class="field field--note">
@@ -234,7 +249,10 @@ export const Page = ({
   prevUrl: string;
   nextUrl: string;
 }) => {
-  const total = timeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
+  const total = timeEntries.reduce(
+    (sum, entry) => sum + (entry.tracking?.minutes || entry.minutes || 0),
+    0
+  );
 
   return html`<!DOCTYPE html>
     <html lang="en">
@@ -250,16 +268,17 @@ export const Page = ({
             >${Icon({ icon: "⬅️", label: "Previous day" })}</a
           >
           <h1>${date}${total ? html` <span>(${total} min)</span>` : ""}</h1>
+          <a href="/">${Icon({ icon: "🏠", label: "Home" })}</a>
           <a href="${nextUrl}">${Icon({ icon: "➡️", label: "Next day" })}</a>
         </header>
 
-        ${Entry({ services, routes, date })}
+        <div class="add">${Entry({ services, routes, date })}</div>
 
         <ul role="list" class="entries">
           ${timeEntries
             .map(
               (entry) =>
-                html`<li class="grid">
+                html`<li class="grid entry">
                   ${Entry({
                     routes,
                     services,
