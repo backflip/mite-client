@@ -53,6 +53,18 @@ const styles = html`<style>
     margin: 0.5rem;
   }
 
+  header {
+    display: flex;
+    align-items: end;
+    gap: 0.5rem;
+    margin-block-end: 2rem;
+
+    h1 {
+      margin-block: 0;
+      font-size: 1.25rem;
+    }
+  }
+
   .grid {
     display: grid;
     grid-template-columns: auto 7rem 3rem 3rem;
@@ -79,6 +91,10 @@ const styles = html`<style>
     display: flex;
     flex-direction: column;
     gap: 1rem;
+
+    .entry-form {
+      margin-block-end: 0;
+    }
 
     .field--minutes {
       grid-column: 2 / 4;
@@ -107,19 +123,23 @@ const Entry = ({
   routes,
   services,
   entry,
+  date,
 }: {
   routes: Routes;
   services: Service[];
+  date: string;
   entry?: TimeEntry;
 }) => {
-  return html` <form
+  return html`<form
     action="${entry ? routes.edit.path : routes.add.path}"
     method="POST"
     class="entry-form grid"
   >
+    <input type="hidden" name="date" value="${date}" />
     ${entry
       ? html`<input type="hidden" name="timeEntry" value="${entry.id}" />`
       : ""}
+
     <div class="field field--service">
       <label for="service" class="visually-hidden">Service</label>
       <input
@@ -195,12 +215,18 @@ export const Page = ({
   title,
   routes,
   services,
-  timeEntriesToday,
+  timeEntries,
+  date,
+  prevUrl,
+  nextUrl,
 }: {
   title: string;
   routes: Routes;
   services: Service[];
-  timeEntriesToday: TimeEntry[];
+  timeEntries: TimeEntry[];
+  date: string;
+  prevUrl: string;
+  nextUrl: string;
 }) => {
   return html`<!DOCTYPE html>
     <html lang="en">
@@ -211,10 +237,18 @@ export const Page = ({
         ${styles}
       </head>
       <body>
-        ${Entry({ services, routes })}
+        <header>
+          <a href="${prevUrl}"
+            >${Icon({ icon: "⬅️", label: "Previous day" })}</a
+          >
+          <h1>${date}</h1>
+          <a href="${nextUrl}">${Icon({ icon: "➡️", label: "Next day" })}</a>
+        </header>
+
+        ${Entry({ services, routes, date })}
 
         <ul role="list" class="entries">
-          ${timeEntriesToday
+          ${timeEntries
             .map(
               (entry) =>
                 html`<li>
@@ -222,6 +256,7 @@ export const Page = ({
                     routes,
                     services,
                     entry,
+                    date,
                   })}
                 </li>`
             )

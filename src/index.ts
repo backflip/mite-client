@@ -1,13 +1,16 @@
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import {
+  getNextDay,
+  getPreviousDay,
   handleError,
-  handleRedirect,
+  handleRootRedirect,
   parseBody,
   requireBasicAuth,
 } from "./utils.ts";
 import { ApiClient } from "./apiClient.ts";
 import { Page } from "./templates.ts";
 import type { Routes } from "../types.js";
+import type { TimeEntry } from "../mite.js";
 
 const { MITE_API_KEY, MITE_ACCOUNT_NAME, PORT } = process.env;
 
@@ -20,6 +23,7 @@ if (!MITE_ACCOUNT_NAME) {
 }
 
 const port = PORT ? Number(PORT) : 3000;
+const internalHost = `http://localhost:${port}`;
 
 const apiClient = new ApiClient({
   apiKey: MITE_API_KEY,
@@ -30,16 +34,30 @@ const routes: Routes = {
   root: {
     path: "/",
     async handler(req: IncomingMessage, res: ServerResponse) {
-      const [services, timeEntriesToday] = await Promise.all([
+      const url = new URL(req.url || "", internalHost);
+      const date = url.searchParams.get("date") ?? undefined;
+
+      const prevUrl = new URL(req.url || "", internalHost);
+      prevUrl.searchParams.set("date", getPreviousDay(date));
+
+      const nextUrl = new URL(req.url || "", internalHost);
+      nextUrl.searchParams.set("date", getNextDay(date));
+
+      const [services, timeEntries] = await Promise.all([
         apiClient.getServices(),
-        apiClient.getTimeEntriesToday(),
+        apiClient.getTimeEntries({ at: date ?? "today" }),
       ]);
 
       const page = Page({
         title: "Mite Client",
         routes,
         services: services.map(({ service }) => service),
-        timeEntriesToday: timeEntriesToday.map(({ time_entry }) => time_entry),
+        timeEntries: (timeEntries as Array<{ time_entry: TimeEntry }>).map(
+          ({ time_entry }) => time_entry
+        ),
+        date: date ?? "today",
+        prevUrl: prevUrl.toString(),
+        nextUrl: nextUrl.toString(),
       });
 
       res.writeHead(200, { "Content-Type": "text/html" });
@@ -71,14 +89,16 @@ const routes: Routes = {
 
       const minutes = params.get("minutes");
       const note = params.get("note");
+      const date = params.get("date");
 
       await apiClient.addTimeEntry({
         serviceId: matchedService.service.id,
         minutes: minutes ? Number(minutes) : 0,
         note,
+        date,
       });
 
-      return handleRedirect(res, "/");
+      return handleRootRedirect(res, date ?? undefined);
     },
   },
   edit: {
@@ -95,14 +115,18 @@ const routes: Routes = {
         throw new Error("Missing time entry");
       }
 
+      const minutes = params.get("minutes");
       const note = params.get("note");
+      const date = params.get("date");
 
       await apiClient.editTimeEntry({
         timeEntryId: Number(timeEntryId),
+        minutes: minutes ? Number(minutes) : 0,
         note,
+        date,
       });
 
-      return handleRedirect(res, "/");
+      return handleRootRedirect(res, date ?? undefined);
     },
   },
   toggle: {
@@ -121,7 +145,9 @@ const routes: Routes = {
 
       await apiClient.toggleTimeEntry({ timeEntryId: Number(timeEntryId) });
 
-      return handleRedirect(res, "/");
+      const date = params.get("date");
+
+      return handleRootRedirect(res, date ?? undefined);
     },
   },
   delete: {
@@ -138,9 +164,11 @@ const routes: Routes = {
         throw new Error("Missing time entry");
       }
 
+      const date = params.get("date");
+
       await apiClient.deleteTimeEntry({ timeEntryId: Number(timeEntryId) });
 
-      return handleRedirect(res, "/");
+      return handleRootRedirect(res, date ?? undefined);
     },
   },
 };
@@ -148,7 +176,9 @@ const routes: Routes = {
 createServer(async (req, res) => {
   requireBasicAuth(req, res, async () => {
     for (const route of Object.values(routes)) {
-      if (req.url === route.path) {
+      const url = new URL(req.url || "", internalHost);
+
+      if (url.pathname === route.path) {
         return route
           .handler(req, res)
           .catch((error) => handleError(res, error));
@@ -159,5 +189,5 @@ createServer(async (req, res) => {
     res.end("Not Found");
   });
 }).listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running at ${internalHost}`);
 });

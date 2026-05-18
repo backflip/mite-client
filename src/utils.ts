@@ -17,8 +17,17 @@ export const handleError = (res: ServerResponse, error: Error) => {
   res.end(error.message);
 };
 
-export const handleRedirect = (res: ServerResponse, location: string) => {
-  res.writeHead(302, { Location: location });
+export const handleRootRedirect = (
+  res: ServerResponse,
+  date?: string
+) => {
+  let location = "/";
+
+  if (date && date !== "today") {
+    location += `?date=${date}`;
+  }
+
+  res.writeHead(302, { location });
   res.end();
 };
 
@@ -49,4 +58,20 @@ export const requireBasicAuth = (
   }
 
   next();
+};
+
+export const getNextDay = (date?: string) => {
+  const nextDate = date ? new Date(date) : new Date();
+
+  nextDate.setDate(nextDate.getDate() + 1);
+
+  return String(nextDate.toISOString().split("T")[0]);
+};
+
+export const getPreviousDay = (date?: string) => {
+  const prevDate = date ? new Date(date) : new Date();
+
+  prevDate.setDate(prevDate.getDate() - 1);
+
+  return String(prevDate.toISOString().split("T")[0]);
 };

@@ -92,22 +92,16 @@ export class ApiClient {
     >;
   }
 
-  async getTimeEntriesToday() {
-    return this.getTimeEntries({ at: "today" }) as unknown as Promise<
-      Array<{
-        time_entry: TimeEntry;
-      }>
-    >;
-  }
-
   async addTimeEntry({
-    serviceId: serviceId,
+    serviceId,
     minutes,
     note,
+    date,
   }: {
     serviceId: number;
     minutes: number;
     note: string | null;
+    date: string | null;
   }) {
     const service = (await this.fetch(`services/${serviceId}.json`)) as {
       service: Service;
@@ -132,6 +126,7 @@ export class ApiClient {
           project_id: project?.project.id,
           minutes,
           note,
+          date_at: date,
         },
       },
     }) as Promise<{ time_entry: TimeEntry }>;
@@ -139,16 +134,22 @@ export class ApiClient {
 
   async editTimeEntry({
     timeEntryId,
+    minutes,
     note,
+    date,
   }: {
     timeEntryId: number;
+    minutes: number;
     note: string | null;
+    date: string | null;
   }) {
     return this.fetch(`time_entries/${timeEntryId}.json`, {
       method: "PATCH",
       body: {
         time_entry: {
+          minutes,
           note,
+          date_at: date,
         },
       },
     }) as Promise<null>;
