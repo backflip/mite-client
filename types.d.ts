@@ -1,4 +1,4 @@
-type Route = {
+export type Route = {
   path: string;
   handler: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
 };
@@ -9,4 +9,5 @@ export type Routes = {
   edit: Route;
   toggle: Route;
   delete: Route;
+  invoice: Route;
 };

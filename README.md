@@ -13,6 +13,7 @@ MITE_API_KEY=123 MITE_ACCOUNT_NAME=456 npm start
 ```sh
 cp .env.template .env
 npm ci
+npx puppeteer browsers install chrome
 npm run dev
 ```
 

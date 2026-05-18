@@ -191,13 +191,21 @@ export class ApiClient {
     return matchedService.service;
   }
 
+  unwrapServiceName(serviceName: string) {
+    const [customerName, projectName, minimalServiceName] = serviceName
+      .split("::")
+      .map((s) => s.trim());
+
+    return { customerName, projectName, minimalServiceName };
+  }
+
   async #getProjectFromService(serviceId: number) {
     const service = (await this.fetch(`services/${serviceId}.json`)) as {
       service: Service;
     };
-    const [customerName, projectName] = service.service.name
-      .split("::")
-      .map((s) => s.trim());
+    const { customerName, projectName } = this.unwrapServiceName(
+      service.service.name
+    );
     const project = (await this.getProjects()).find(
       ({ project }) =>
         project.name === projectName && project.customer_name === customerName
