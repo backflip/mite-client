@@ -48,7 +48,7 @@ const styles = html`<style>
     cursor: pointer;
 
     &[type="submit"] {
-      background: rgba(0, 200, 0, 0.1);
+      background: rgb(230, 250, 230);
     }
   }
 
@@ -99,7 +99,7 @@ const styles = html`<style>
   }
 
   .add {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgb(230, 230, 230);
     margin: calc(-1 * var(--page-padding));
     margin-block-end: 1rem;
     padding: var(--page-padding);
@@ -130,13 +130,13 @@ const styles = html`<style>
       grid-column: 4;
     }
     .action--delete {
-      background: rgba(200, 0, 0, 0.1);
+      background: rgb(250, 230, 230);
     }
 
     .entry:has(.action--toggle[aria-pressed="true"]) {
       .field--minutes input,
       .action--toggle {
-        background: rgba(0, 0, 200, 0.1);
+        background: rgb(230, 230, 250);
       }
     }
   }
