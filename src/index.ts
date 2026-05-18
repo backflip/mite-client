@@ -48,14 +48,14 @@ const routes: Routes = {
     path: "/add",
     async handler(req: IncomingMessage, res: ServerResponse) {
       if (req.method !== "POST") {
-        return handleError(res, new Error("Method Not Allowed"));
+        throw new Error("Method Not Allowed");
       }
 
       const params = await parseBody(req);
       const service = params.get("service");
 
       if (!service) {
-        return handleError(res, new Error("Missing service"));
+        throw new Error("Missing service");
       }
 
       const services = await apiClient.getServices();
@@ -64,7 +64,7 @@ const routes: Routes = {
       );
 
       if (!matchedService) {
-        return handleError(res, new Error("Service not found"));
+        throw new Error("Service not found");
       }
 
       const minutes = params.get("minutes");
@@ -83,26 +83,22 @@ const routes: Routes = {
     path: "/edit",
     async handler(req: IncomingMessage, res: ServerResponse) {
       if (req.method !== "POST") {
-        return handleError(res, new Error("Method Not Allowed"));
+        throw new Error("Method Not Allowed");
       }
 
       const params = await parseBody(req);
       const timeEntryId = params.get("timeEntry");
 
       if (!timeEntryId) {
-        return handleError(res, new Error("Missing time entry"));
+        throw new Error("Missing time entry");
       }
 
       const note = params.get("note");
 
-      try {
-        await apiClient.editTimeEntry({
-          timeEntryId: Number(timeEntryId),
-          note,
-        });
-      } catch (error: any) {
-        return handleError(res, error);
-      }
+      await apiClient.editTimeEntry({
+        timeEntryId: Number(timeEntryId),
+        note,
+      });
 
       return handleRedirect(res, "/");
     },
@@ -111,14 +107,14 @@ const routes: Routes = {
     path: "/toggle",
     async handler(req: IncomingMessage, res: ServerResponse) {
       if (req.method !== "POST") {
-        return handleError(res, new Error("Method Not Allowed"));
+        throw new Error("Method Not Allowed");
       }
 
       const params = await parseBody(req);
       const timeEntryId = params.get("timeEntry");
 
       if (!timeEntryId) {
-        return handleError(res, new Error("Missing time entry"));
+        throw new Error("Missing time entry");
       }
 
       await apiClient.toggleTimeEntry({ timeEntryId: Number(timeEntryId) });
@@ -132,7 +128,9 @@ createServer(async (req, res) => {
   requireBasicAuth(req, res, async () => {
     for (const route of Object.values(routes)) {
       if (req.url === route.path) {
-        return route.handler(req, res);
+        return route
+          .handler(req, res)
+          .catch((error) => handleError(res, error));
       }
     }
 
