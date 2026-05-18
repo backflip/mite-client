@@ -176,4 +176,10 @@ export class ApiClient {
       tracker: Tracker;
     }>;
   }
+
+  async deleteTimeEntry({ timeEntryId }: { timeEntryId: number }) {
+    return this.fetch(`time_entries/${timeEntryId}.json`, {
+      method: "DELETE",
+    }) as Promise<null>;
+  }
 }

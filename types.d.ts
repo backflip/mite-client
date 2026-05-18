@@ -8,4 +8,5 @@ export type Routes = {
   add: Route;
   edit: Route;
   toggle: Route;
+  delete: Route;
 };

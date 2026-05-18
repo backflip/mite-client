@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Service, TimeEntry } from "../mite.js";
 import type { Routes } from "../types.js";
 
@@ -18,7 +19,7 @@ const styles = html`<style>
     position: absolute;
 
     &:not(:focus) {
-      clip: rect(0 0 0 0);
+      transform: scale(0);
     }
   }
 
@@ -31,6 +32,14 @@ const styles = html`<style>
     font: inherit;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  button {
+    padding-block: 0;
+
+    &[type="submit"] {
+      background: rgba(0, 200, 0, 0.1);
+    }
   }
 
   [role="list"] {
@@ -46,7 +55,7 @@ const styles = html`<style>
 
   .grid {
     display: grid;
-    grid-template-columns: auto 7rem 3rem;
+    grid-template-columns: auto 7rem 3rem 3rem;
     gap: 0.5rem;
 
     .grid {
@@ -55,7 +64,6 @@ const styles = html`<style>
   }
 
   .entry-form {
-    position: relative;
     margin-block-end: 2rem;
 
     .field--minutes {
@@ -63,13 +71,7 @@ const styles = html`<style>
     }
 
     .field--note {
-      grid-column: 1 / -1;
-    }
-
-    button[type="submit"] {
-      inset: 0;
-      inset-inline-start: auto;
-      width: auto;
+      grid-column: 1 / 4;
     }
   }
 
@@ -77,32 +79,31 @@ const styles = html`<style>
     display: flex;
     flex-direction: column;
     gap: 1rem;
-  }
-
-  .entry {
-    position: relative;
-
-    .entry-form {
-      display: contents;
-    }
 
     .field--minutes {
-      grid-column: 2;
+      grid-column: 2 / 4;
+    }
+    .field--note {
+      grid-column: 1 / 3;
     }
 
-    .toggle-form {
-      grid-row: 1;
-      grid-column: 3;
-      display: flex;
-
-      button[type="submit"] {
-        padding-block: 0;
-      }
+    .action--toggle {
+      background: transparent;
+    }
+    .action--delete {
+      background: rgba(200, 0, 0, 0.1);
     }
   }
 </style>`;
 
-const renderEntry = ({
+const Icon = ({ icon, label }: { icon: string; label: string }) => {
+  const id = randomUUID();
+
+  return html`<span role="img" aria-labelledby="${id}">${icon}</span>
+    <span id="${id}" class="visually-hidden">${label}</span>`;
+};
+
+const Entry = ({
   routes,
   services,
   entry,
@@ -112,75 +113,85 @@ const renderEntry = ({
   entry?: TimeEntry;
 }) => {
   return html` <form
-      action="${entry ? routes.edit?.path : routes.add?.path}"
-      method="POST"
-      class="entry-form"
-    >
-      ${entry
-        ? html`<input type="hidden" name="timeEntry" value="${entry.id}" />`
-        : ""}
-      <div class="grid">
-        <div class="field field--service">
-          <label for="service" class="visually-hidden">Service</label>
-          <input
-            type="text"
-            name="service"
-            id="service"
-            required
-            list="services"
-            placeholder="Service"
-            value="${entry?.service_name ?? ""}"
-          />
-          <datalist id="services">
-            ${services
-              .map(
-                (service) =>
-                  html`<option value="${service.id}">${service.name}</option>`
-              )
-              .join("")}
-          </datalist>
-        </div>
-        <div class="field field--minutes">
-          <label for="minutes" class="visually-hidden">Minutes</label>
-          <input
-            type="number"
-            name="minutes"
-            id="minutes"
-            placeholder="Minutes"
-            value="${entry?.minutes ?? ""}"
-          />
-        </div>
-        <div class="field field--note">
-          <label for="note" class="visually-hidden">Note</label>
-          <input
-            type="text"
-            name="note"
-            id="note"
-            placeholder="Note"
-            value="${entry?.note ?? ""}"
-          />
-        </div>
-      </div>
-
-      <button type="submit" class="visually-hidden">
-        ${entry ? "Save" : "Add"}
-      </button>
-    </form>
+    action="${entry ? routes.edit.path : routes.add.path}"
+    method="POST"
+    class="entry-form grid"
+  >
     ${entry
-      ? html`<form
-          action="${routes.toggle?.path}"
-          method="POST"
-          class="toggle-form"
+      ? html`<input type="hidden" name="timeEntry" value="${entry.id}" />`
+      : ""}
+    <div class="field field--service">
+      <label for="service" class="visually-hidden">Service</label>
+      <input
+        type="text"
+        name="service"
+        id="service"
+        required
+        list="services"
+        placeholder="Service"
+        value="${entry?.service_name ?? ""}"
+      />
+      <datalist id="services">
+        ${services
+          .map(
+            (service) =>
+              html`<option value="${service.id}">${service.name}</option>`
+          )
+          .join("")}
+      </datalist>
+    </div>
+    <div class="field field--minutes">
+      <label for="minutes" class="visually-hidden">Minutes</label>
+      <input
+        type="number"
+        name="minutes"
+        id="minutes"
+        placeholder="Minutes"
+        value="${entry?.minutes ?? ""}"
+      />
+    </div>
+    ${entry
+      ? html`<button
+          type="submit"
+          class="action action--toggle"
+          formaction="${routes.toggle.path}"
+          aria-pressed="${!!entry.tracking}"
         >
-          <input type="hidden" name="timeEntry" value="${entry.id}" />
-          <button type="submit" aria-pressed="${!!entry.tracking}">
-            ${!!entry.tracking ? "⏸️" : "▶️"}
-          </button>
-        </form>`
-      : ""}`;
+          ${!!entry.tracking
+            ? Icon({ icon: "⏸️", label: "Pause" })
+            : Icon({ icon: "▶️", label: "Play" })}
+        </button>`
+      : ""}
+    <div class="field field--note">
+      <label for="note" class="visually-hidden">Note</label>
+      <input
+        type="text"
+        name="note"
+        id="note"
+        placeholder="Note"
+        value="${entry?.note ?? ""}"
+      />
+    </div>
+
+    ${entry
+      ? html`<button
+          type="submit"
+          class="action action--delete"
+          formaction="${routes.delete.path}"
+        >
+          ${Icon({ icon: "🗑️", label: "Delete" })}
+        </button>`
+      : ""}
+
+    <button type="submit">
+      ${entry
+        ? Icon({ icon: "💾", label: "Save" })
+        : Icon({ icon: "➕", label: "Add" })}
+    </button>
+  </form>`;
 };
 
-export const renderPage = ({
+export const Page = ({
   title,
   routes,
   services,
@@ -200,14 +211,14 @@ export const renderPage = ({
         ${styles}
       </head>
       <body>
-        ${renderEntry({ services, routes })}
+        ${Entry({ services, routes })}
 
         <ul role="list" class="entries">
           ${timeEntriesToday
             .map(
               (entry) =>
-                html`<li class="entry grid">
-                  ${renderEntry({
+                html`<li>
+                  ${Entry({
                     routes,
                     services,
                     entry,

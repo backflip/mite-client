@@ -6,7 +6,7 @@ import {
   requireBasicAuth,
 } from "./utils.ts";
 import { ApiClient } from "./apiClient.ts";
-import { renderPage } from "./templates.ts";
+import { Page } from "./templates.ts";
 import type { Routes } from "../types.js";
 
 const { MITE_API_KEY, MITE_ACCOUNT_NAME, PORT } = process.env;
@@ -35,7 +35,7 @@ const routes: Routes = {
         apiClient.getTimeEntriesToday(),
       ]);
 
-      const page = renderPage({
+      const page = Page({
         title: "Mite Client",
         routes,
         services: services.map(({ service }) => service),
@@ -120,6 +120,25 @@ const routes: Routes = {
       }
 
       await apiClient.toggleTimeEntry({ timeEntryId: Number(timeEntryId) });
+
+      return handleRedirect(res, "/");
+    },
+  },
+  delete: {
+    path: "/delete",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      if (req.method !== "POST") {
+        throw new Error("Method Not Allowed");
+      }
+
+      const params = await parseBody(req);
+      const timeEntryId = params.get("timeEntry");
+
+      if (!timeEntryId) {
+        throw new Error("Missing time entry");
+      }
+
+      await apiClient.deleteTimeEntry({ timeEntryId: Number(timeEntryId) });
 
       return handleRedirect(res, "/");
     },
