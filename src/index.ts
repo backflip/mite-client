@@ -1,12 +1,12 @@
 import { createServer } from "node:http";
-import html, {
+import {
   handleError,
   handleRedirect,
   parseBody,
   requireBasicAuth,
 } from "./utils.ts";
 import { ApiClient } from "./apiClient.ts";
-import type { Service, TimeEntry } from "../mite.js";
+import { renderPage } from "./templates.ts";
 
 const { MITE_API_KEY, MITE_ACCOUNT_NAME } = process.env;
 
@@ -22,78 +22,6 @@ const apiClient = new ApiClient({
   apiKey: MITE_API_KEY,
   accountName: MITE_ACCOUNT_NAME,
 });
-
-const renderEntry = ({
-  services,
-  entry,
-}: {
-  services: Service[];
-  entry?: TimeEntry;
-}) => {
-  return html` <form
-      action="/${entry ? "edit" : "add"}"
-      method="POST"
-      class="entry-form"
-    >
-      ${entry
-        ? html`<input type="hidden" name="timeEntry" value="${entry.id}" />`
-        : ""}
-      <div class="grid">
-        <div class="field field--service">
-          <label for="service" class="visually-hidden">Service</label>
-          <input
-            type="text"
-            name="service"
-            id="service"
-            required
-            list="services"
-            placeholder="Service"
-            value="${entry?.service_name ?? ""}"
-          />
-          <datalist id="services">
-            ${services
-              .map(
-                (service) =>
-                  html`<option value="${service.id}">${service.name}</option>`
-              )
-              .join("")}
-          </datalist>
-        </div>
-        <div class="field field--minutes">
-          <label for="minutes" class="visually-hidden">Minutes</label>
-          <input
-            type="number"
-            name="minutes"
-            id="minutes"
-            placeholder="Minutes"
-            value="${entry?.minutes ?? ""}"
-          />
-        </div>
-        <div class="field field--note">
-          <label for="note" class="visually-hidden">Note</label>
-          <input
-            type="text"
-            name="note"
-            id="note"
-            placeholder="Note"
-            value="${entry?.note ?? ""}"
-          />
-        </div>
-      </div>
-
-      <button type="submit" class="visually-hidden">
-        ${entry ? "Save" : "Add"}
-      </button>
-    </form>
-    ${entry
-      ? html`<form action="/toggle" method="POST" class="toggle-form">
-          <input type="hidden" name="timeEntry" value="${entry.id}" />
-          <button type="submit" aria-pressed="${!!entry.tracking}">
-            ${!!entry.tracking ? "⏸️" : "▶️"}
-          </button>
-        </form>`
-      : ""}`;
-};
 
 createServer(async (req, res) => {
   requireBasicAuth(req, res, async () => {
@@ -180,125 +108,14 @@ createServer(async (req, res) => {
       apiClient.getTimeEntriesToday(),
     ]);
 
+    const page = renderPage({
+      title: "Mite Client",
+      services: services.map(({ service }) => service),
+      timeEntriesToday: timeEntriesToday.map(({ time_entry }) => time_entry),
+    });
+
     res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(
-      html`<!DOCTYPE html>
-        <html lang="en">
-          <head>
-            <meta charset="UTF-8" />
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1.0"
-            />
-            <title>Mite Client</title>
-            <style>
-              .visually-hidden {
-                position: absolute;
-
-                &:not(:focus) {
-                  clip: rect(0 0 0 0);
-                }
-              }
-
-              input,
-              textarea,
-              button {
-                padding: 0.75rem;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                font: inherit;
-                width: 100%;
-                box-sizing: border-box;
-              }
-
-              [role="list"] {
-                list-style: none;
-                margin: 0;
-                padding: 0;
-              }
-
-              body {
-                font-family: sans-serif;
-                margin: 0.5rem;
-              }
-
-              .grid {
-                display: grid;
-                grid-template-columns: auto 7rem 3rem;
-                gap: 0.5rem;
-
-                .grid {
-                  display: contents;
-                }
-              }
-
-              .entry-form {
-                position: relative;
-                margin-block-end: 2rem;
-
-                .field--minutes {
-                  grid-column: 2 / -1;
-                }
-
-                .field--note {
-                  grid-column: 1 / -1;
-                }
-
-                button[type="submit"] {
-                  inset: 0;
-                  inset-inline-start: auto;
-                  width: auto;
-                }
-              }
-
-              .entries {
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-              }
-
-              .entry {
-                position: relative;
-
-                .entry-form {
-                  display: contents;
-                }
-
-                .field--minutes {
-                  grid-column: 2;
-                }
-
-                .toggle-form {
-                  grid-row: 1;
-                  grid-column: 3;
-                  display: flex;
-
-                  button[type="submit"] {
-                    padding-block: 0;
-                  }
-                }
-              }
-            </style>
-          </head>
-          <body>
-            ${renderEntry({ services: services.map(({ service }) => service) })}
-
-            <ul role="list" class="entries">
-              ${timeEntriesToday
-                .map(
-                  ({ time_entry }) =>
-                    html`<li class="entry grid">
-                      ${renderEntry({
-                        services: services.map(({ service }) => service),
-                        entry: time_entry,
-                      })}
-                    </li>`
-                )
-                .join("")}
-            </ul>
-          </body>
-        </html>`
-    );
+    res.end(page);
   });
 }).listen(3000, () => {
   console.log("Server running at http://localhost:3000/");

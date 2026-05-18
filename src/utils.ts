@@ -1,17 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-/**
- * Allow for syntax highlighting in template strings
- * E.g. via https://marketplace.visualstudio.com/items?itemName=bierner.lit-html
- * Source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#raw_strings
- */
-export default function html(
-  strings: string[] | ArrayLike<string>,
-  ...values: any[]
-) {
-  return String.raw({ raw: strings }, ...values);
-}
-
 export const parseBody = async (req: IncomingMessage) => {
   let body = "";
 
@@ -37,7 +25,7 @@ export const handleRedirect = (res: ServerResponse, location: string) => {
 export const requireBasicAuth = (
   req: IncomingMessage,
   res: ServerResponse,
-  next: () => void,
+  next: () => void
 ) => {
   const { BASIC_AUTH } = process.env;
 
