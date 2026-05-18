@@ -9,7 +9,7 @@ import { ApiClient } from "./apiClient.ts";
 import { renderPage } from "./templates.ts";
 import type { Routes } from "../types.js";
 
-const { MITE_API_KEY, MITE_ACCOUNT_NAME } = process.env;
+const { MITE_API_KEY, MITE_ACCOUNT_NAME, PORT } = process.env;
 
 if (!MITE_API_KEY) {
   throw new Error("process.env.MITE_API_KEY missing");
@@ -18,6 +18,8 @@ if (!MITE_API_KEY) {
 if (!MITE_ACCOUNT_NAME) {
   throw new Error("process.env.MITE_ACCOUNT_NAME missing");
 }
+
+const port = PORT ? Number(PORT) : 3000;
 
 const apiClient = new ApiClient({
   apiKey: MITE_API_KEY,
@@ -137,6 +139,6 @@ createServer(async (req, res) => {
     res.writeHead(404, { "Content-Type": "text/html" });
     res.end("Not Found");
   });
-}).listen(3000, () => {
-  console.log("Server running at http://localhost:3000/");
+}).listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
