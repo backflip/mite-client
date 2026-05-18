@@ -404,14 +404,14 @@ export const InvoicePage = ({
         <title>Rechnung</title>
         <style>
           :root {
-            --accent-color: #999;
-            --line-color: #ddd;
+            --accent-color: lightgray;
+            --line-color: lightgray;
           }
 
           body {
-            margin: 2rem;
+            margin: 4rem;
             font-family: sans-serif;
-            font-size: 87.5%;
+            font-size: 75%;
           }
 
           h1 {
