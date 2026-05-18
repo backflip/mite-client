@@ -47,7 +47,16 @@ export class ApiClient {
       },
       ...(options?.body && { body: JSON.stringify(options.body) }),
     });
-    const data = await response.json().catch(() => null);
+    const data = (await response.json().catch(() => null)) as Record<
+      string,
+      any
+    > | null;
+
+    if (!response.ok) {
+      throw new Error(
+        `API request failed: ${response.status} ${response.statusText}: ${data?.error}`
+      );
+    }
 
     return data;
   }
