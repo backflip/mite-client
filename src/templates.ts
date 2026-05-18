@@ -62,6 +62,10 @@ const styles = html`<style>
     h1 {
       margin-block: 0;
       font-size: 1.25rem;
+
+      span {
+        font-weight: normal;
+      }
     }
   }
 
@@ -230,6 +234,8 @@ export const Page = ({
   prevUrl: string;
   nextUrl: string;
 }) => {
+  const total = timeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
+
   return html`<!DOCTYPE html>
     <html lang="en">
       <head>
@@ -243,7 +249,7 @@ export const Page = ({
           <a href="${prevUrl}"
             >${Icon({ icon: "⬅️", label: "Previous day" })}</a
           >
-          <h1>${date}</h1>
+          <h1>${date}${total ? html` <span>(${total} min)</span>` : ""}</h1>
           <a href="${nextUrl}">${Icon({ icon: "➡️", label: "Next day" })}</a>
         </header>
 
