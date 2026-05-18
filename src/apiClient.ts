@@ -103,27 +103,14 @@ export class ApiClient {
     note: string | null;
     date: string | null;
   }) {
-    const service = (await this.fetch(`services/${serviceId}.json`)) as {
-      service: Service;
-    };
-    const [customerName, projectName] = service.service.name
-      .split("::")
-      .map((s) => s.trim());
-    const project = (await this.getProjects()).find(
-      ({ project }) =>
-        project.name === projectName && project.customer_name === customerName
-    );
-
-    if (!project) {
-      throw new Error(`Project not found for service ${serviceId}`);
-    }
+    const project = await this.#getProjectFromService(serviceId);
 
     return this.fetch("time_entries.json", {
       method: "POST",
       body: {
         time_entry: {
           service_id: serviceId,
-          project_id: project?.project.id,
+          project_id: project.id,
           minutes,
           note,
           date_at: date,
@@ -134,19 +121,25 @@ export class ApiClient {
 
   async editTimeEntry({
     timeEntryId,
+    serviceId,
     minutes,
     note,
     date,
   }: {
     timeEntryId: number;
+    serviceId: number;
     minutes: number;
     note: string | null;
     date: string | null;
   }) {
+    const project = await this.#getProjectFromService(serviceId);
+
     return this.fetch(`time_entries/${timeEntryId}.json`, {
       method: "PATCH",
       body: {
         time_entry: {
+          service_id: serviceId,
+          project_id: project.id,
           minutes,
           note,
           date_at: date,
@@ -182,5 +175,38 @@ export class ApiClient {
     return this.fetch(`time_entries/${timeEntryId}.json`, {
       method: "DELETE",
     }) as Promise<null>;
+  }
+
+  async getService(service: string) {
+    const services = await this.getServices();
+    const matchedService = services.find(
+      ({ service: item }) =>
+        item.id === Number(service) || item.name === service
+    );
+
+    if (!matchedService) {
+      throw new Error(`Service "${service}" not found`);
+    }
+
+    return matchedService.service;
+  }
+
+  async #getProjectFromService(serviceId: number) {
+    const service = (await this.fetch(`services/${serviceId}.json`)) as {
+      service: Service;
+    };
+    const [customerName, projectName] = service.service.name
+      .split("::")
+      .map((s) => s.trim());
+    const project = (await this.getProjects()).find(
+      ({ project }) =>
+        project.name === projectName && project.customer_name === customerName
+    );
+
+    if (!project) {
+      throw new Error(`Project not found for service ${serviceId}`);
+    }
+
+    return project.project;
   }
 }

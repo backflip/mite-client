@@ -74,25 +74,14 @@ const routes: Routes = {
       const params = await parseBody(req);
       const service = params.get("service");
 
-      if (!service) {
-        throw new Error("Missing service");
-      }
-
-      const services = await apiClient.getServices();
-      const matchedService = services.find(
-        ({ service: item }) => item.id === Number(service)
-      );
-
-      if (!matchedService) {
-        throw new Error("Service not found");
-      }
+      const matchedService = await apiClient.getService(service ?? "");
 
       const minutes = params.get("minutes");
       const note = params.get("note");
       const date = params.get("date");
 
       await apiClient.addTimeEntry({
-        serviceId: matchedService.service.id,
+        serviceId: matchedService.id,
         minutes: minutes ? Number(minutes) : 0,
         note,
         date,
@@ -110,10 +99,13 @@ const routes: Routes = {
 
       const params = await parseBody(req);
       const timeEntryId = params.get("timeEntry");
+      const service = params.get("service");
 
       if (!timeEntryId) {
         throw new Error("Missing time entry");
       }
+
+      const matchedService = await apiClient.getService(service ?? "");
 
       const minutes = params.get("minutes");
       const note = params.get("note");
@@ -121,6 +113,7 @@ const routes: Routes = {
 
       await apiClient.editTimeEntry({
         timeEntryId: Number(timeEntryId),
+        serviceId: matchedService.id,
         minutes: minutes ? Number(minutes) : 0,
         note,
         date,
