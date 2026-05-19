@@ -5,7 +5,7 @@
 ### Prod
 
 ```sh
-MITE_API_KEY=123 MITE_ACCOUNT_NAME=456 npm start
+MITE_API_KEY=key MITE_ACCOUNT_NAME=name BASIC_AUTH=user:pass npm start
 ```
 
 ### Dev
@@ -16,6 +16,14 @@ npm ci
 npx puppeteer browsers install chrome
 npm run dev
 ```
+
+### Deployment
+
+```sh
+fly deploy
+```
+
+`Dockerfile` is auto-generated via `npx @flydotio/dockerfile@latest`.
 
 ## Notes
 
