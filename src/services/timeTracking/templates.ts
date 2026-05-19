@@ -327,7 +327,7 @@ export const Page = ({
             >${Icon({ icon: "⬅️", label: "Previous day" })}</a
           >
           <h1>
-            ${date}${total ? html` <span>(${formatMinutes(total)})</span>` : ""}
+            ${date}${total ? html`<span>(${formatMinutes(total)})</span>` : ""}
           </h1>
           <form
             action="${routes.invoice.path}"
