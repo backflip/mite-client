@@ -10,4 +10,6 @@ export type Routes = {
   toggle: Route;
   delete: Route;
   invoice: Route;
+  total: Route;
+  tracking: Route;
 };

@@ -61,4 +61,27 @@ export class TimeTrackingService {
   async delete({ timeEntryId }: { timeEntryId: Param }) {
     await this.#apiClient.deleteTimeEntry({ timeEntryId: Number(timeEntryId) });
   }
+
+  async getTotal({ date }: { date: Param }) {
+    const entries = await this.#apiClient.getTimeEntries({
+      at: date ?? "today",
+    });
+    const total = entries.reduce((acc, entry) => {
+      acc += entry.time_entry.tracking?.minutes || entry.time_entry.minutes;
+
+      return acc;
+    }, 0);
+
+    return total;
+  }
+
+  async getTrackedTime() {
+    const { tracker } = await this.#apiClient.getTracker();
+    const minutes =
+      "tracking_time_entry" in tracker
+        ? tracker.tracking_time_entry.minutes
+        : 0;
+
+    return minutes;
+  }
 }

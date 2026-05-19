@@ -167,6 +167,47 @@ const routes: Routes = {
       res.end(zip);
     },
   },
+  total: {
+    path: "/total",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      const url = new URL(req.url || "", internalHost);
+      const date = url.searchParams.get("date");
+
+      const interval = 30000;
+      const update = async () => {
+        const total = await timeTrackingService.getTotal({ date });
+
+        res.write(`data: ${JSON.stringify(total)}\n\n`);
+      };
+
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        Connection: "keep-alive",
+      });
+
+      update();
+      setInterval(update, interval);
+    },
+  },
+  tracking: {
+    path: "/tracking",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      const interval = 30000;
+      const update = async () => {
+        const time = await timeTrackingService.getTrackedTime();
+
+        res.write(`data: ${JSON.stringify(time)}\n\n`);
+      };
+
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        Connection: "keep-alive",
+      });
+
+      update();
+      setInterval(update, interval);
+    },
+  },
 };
 
 createServer(async (req, res) => {

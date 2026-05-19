@@ -155,9 +155,7 @@ export class ApiClient {
   }
 
   async toggleTimeEntry({ timeEntryId }: { timeEntryId: number }) {
-    const currentTracker = (await this.fetch(`tracker.json`)) as {
-      tracker: Tracker | {};
-    };
+    const currentTracker = await this.getTracker()
 
     if (
       "tracking_time_entry" in currentTracker.tracker &&
@@ -195,6 +193,12 @@ export class ApiClient {
     }
 
     return matchedService.service;
+  }
+
+  async getTracker() {
+    return this.fetch(`tracker.json`) as Promise<{
+      tracker: Tracker | {};
+    }>;
   }
 
   unwrapServiceName(serviceName: string) {

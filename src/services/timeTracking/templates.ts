@@ -146,7 +146,61 @@ const styles = html`<style>
   }
 </style>`;
 
-const scripts = html`<script>
+const scripts = html`<script type="module">
+  /**
+   * Update total time using event stream
+   */
+  class MiteTotal extends HTMLElement {
+    static observedAttributes = ["date"];
+
+    evenSource;
+
+    connectedCallback() {
+      this.render();
+    }
+
+    render() {
+      const date = this.attributes.date.value;
+
+      if (this.eventSource) {
+        this.eventSource.close();
+      }
+
+      this.eventSource = new EventSource("/total?date=" + date);
+
+      this.eventSource.addEventListener(
+        "message",
+        (event) => (this.innerHTML = event.data)
+      );
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      this.render();
+    }
+  }
+
+  customElements.define("mite-total", MiteTotal);
+
+  /**
+   * Update tracking time using event stream
+   */
+  class MiteTracking extends HTMLElement {
+    connectedCallback() {
+      const input = this.querySelector("input");
+      const eventSource = new EventSource("/tracking");
+
+      eventSource.addEventListener(
+        "message",
+        (event) => (input.value = event.data)
+      );
+    }
+  }
+
+  customElements.define("mite-tracking", MiteTracking);
+
+  /**
+   * Keyboard navigation
+   */
   document.addEventListener("keydown", (event) => {
     if (event.target.matches("input, textarea, select")) {
       return;
@@ -252,13 +306,23 @@ const Entry = ({
       </div>
       <div class="field field--minutes">
         <label for="minutes" class="visually-hidden">Minutes</label>
-        <input
-          type="number"
-          name="minutes"
-          id="minutes"
-          placeholder="Minutes"
-          value="${entry?.tracking?.minutes || entry?.minutes || ""}"
-        />
+        ${entry?.tracking
+          ? html`<mite-tracking>
+              <input
+                type="number"
+                name="minutes"
+                id="minutes"
+                placeholder="Minutes"
+                value="${entry?.tracking?.minutes || entry?.minutes || ""}"
+              />
+            </mite-tracking>`
+          : html`<input
+              type="number"
+              name="minutes"
+              id="minutes"
+              placeholder="Minutes"
+              value="${entry?.tracking?.minutes || entry?.minutes || ""}"
+            />`}
       </div>
 
       <button type="submit" class="action action--submit">
@@ -308,11 +372,6 @@ export const Page = ({
   prevUrl: string;
   nextUrl: string;
 }) => {
-  const total = timeEntries.reduce(
-    (sum, entry) => sum + (entry.tracking?.minutes || entry.minutes || 0),
-    0
-  );
-
   return html`<!DOCTYPE html>
     <html lang="en">
       <head>
@@ -327,7 +386,7 @@ export const Page = ({
             >${Icon({ icon: "⬅️", label: "Previous day" })}</a
           >
           <h1>
-            ${date}${total ? html`<span>(${formatMinutes(total)})</span>` : ""}
+            ${date} <span>(<mite-total date="${date}"></mite-total>)</span>
           </h1>
           <form
             action="${routes.invoice.path}"
