@@ -21,13 +21,18 @@ export class TimeTrackingService {
     date: Param;
   }) {
     const matchedService = await this.#apiClient.getService(serviceId ?? "");
-
-    await this.#apiClient.addTimeEntry({
+    const { time_entry: entry } = await this.#apiClient.addTimeEntry({
       serviceId: matchedService.id,
       minutes: minutes ? Number(minutes) : 0,
       note,
       date,
     });
+
+    if (!minutes) {
+      await this.#apiClient.toggleTimeEntry({ timeEntryId: entry.id });
+    }
+
+    return entry;
   }
 
   async edit({
