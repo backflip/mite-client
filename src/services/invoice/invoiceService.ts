@@ -2,6 +2,7 @@ import puppeteer from "puppeteer";
 import type { ApiClient } from "../../mite/apiClient.ts";
 import { BlobReader, BlobWriter, ZipWriter } from "@zip.js/zip.js";
 import { Page } from "./templates.ts";
+import config from "../../../config.json" with { type: "json" };
 
 export class InvoiceService {
   #apiClient: ApiClient;
@@ -114,6 +115,7 @@ export class InvoiceService {
             month: monthName,
             customer,
             number,
+            company: config.company,
           });
           const content = await this.#createPdf(markup);
           const name = `${this.#formatFileNamePart(customer?.name)}_${this.#formatFileNamePart(project)}_${this.#formatFileNamePart(monthName)}_responsivech_GmbH.pdf`;
