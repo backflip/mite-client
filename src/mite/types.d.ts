@@ -116,7 +116,11 @@ export type TimeEntriesQuery = {
     | "this_year"
     | "last_year"
     | string;
-  group_by?:
+  tracking?: boolean;
+};
+
+export type GroupedTimeEntriesQuery = TimeEntriesQuery & {
+  group_by:
     | "user"
     | "customer"
     | "project"
@@ -125,7 +129,6 @@ export type TimeEntriesQuery = {
     | "week"
     | "month"
     | "year";
-  tracking?: boolean;
 };
 
 export type Tracker = {

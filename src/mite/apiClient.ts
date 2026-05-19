@@ -1,12 +1,13 @@
 import type {
   Customer,
+  GroupedTimeEntriesQuery,
   Project,
   Service,
   TimeEntriesQuery,
   TimeEntry,
   TimeEntryGroup,
   Tracker,
-} from "../mite.js";
+} from "./types.js";
 
 export class ApiClient {
   apiKey: string;
@@ -87,8 +88,13 @@ export class ApiClient {
 
   async getTimeEntries(query: TimeEntriesQuery = {}) {
     return this.fetch("time_entries.json", { query }) as Promise<
-      | Array<{ time_entry: TimeEntry }>
-      | Array<{ time_entry_group: TimeEntryGroup }>
+      Array<{ time_entry: TimeEntry }>
+    >;
+  }
+
+  async getGroupedTimeEntries(query: GroupedTimeEntriesQuery) {
+    return this.fetch("time_entries.json", { query }) as Promise<
+      Array<{ time_entry_group: TimeEntryGroup }>
     >;
   }
 

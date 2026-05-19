@@ -1,6 +1,16 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import puppeteer from "puppeteer";
-import { BlobReader, BlobWriter, ZipWriter } from "@zip.js/zip.js";
+
+/**
+ * Allow for syntax highlighting in template strings
+ * E.g. via https://marketplace.visualstudio.com/items?itemName=bierner.lit-html
+ * Source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#raw_strings
+ */
+export default function html(
+  strings: string[] | ArrayLike<string>,
+  ...values: any[]
+) {
+  return String.raw({ raw: strings }, ...values);
+}
 
 export const parseBody = async (req: IncomingMessage) => {
   let body = "";
@@ -73,45 +83,4 @@ export const getPreviousDay = (date?: string) => {
   prevDate.setDate(prevDate.getDate() - 1);
 
   return String(prevDate.toISOString().split("T")[0]);
-};
-
-export const formatMinutes = (minutes: number) => {
-  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
-};
-
-export const createPdf = async (html: string) => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  await page.goto(`data:text/html,${html}`, {
-    waitUntil: "networkidle2",
-  });
-
-  const pdf = await page.pdf();
-
-  await browser.close();
-
-  return Buffer.from(pdf);
-};
-
-export const createZip = async (
-  files: Array<{ name: string; content: Buffer }>
-) => {
-  const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
-
-  await Promise.all(
-    files.map(({ name, content }) =>
-      zipWriter.add(name, new BlobReader(new Blob([content])))
-    )
-  );
-
-  return zipWriter.close();
-};
-
-export const formatFileNamePart = (part?: string) => {
-  return part?.replace(/[^a-z0-9]/gi, "") ?? "";
-};
-
-export const getMonthName = (monthIndex: number) => {
-  return new Date(0, monthIndex).toLocaleString("de-CH", { month: "long" });
 };
