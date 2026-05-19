@@ -343,7 +343,7 @@ export const Page = ({
         </header>
 
         <div class="add">
-          ${Entry({ services, routes, date, autoFocus: true })}
+          ${Entry({ services, routes, date, autoFocus: date === "today" })}
         </div>
 
         <ul role="list" class="entries">
