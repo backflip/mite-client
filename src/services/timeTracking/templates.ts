@@ -93,36 +93,48 @@ const styles = html`<style>
   .add {
     background: rgb(230, 230, 230);
     margin: calc(-1 * var(--page-padding));
-    margin-block-end: 1rem;
+    margin-block-end: 1.5rem;
     padding: var(--page-padding);
   }
 
   .entry-form {
+    .field--service {
+      grid-column: 1 / 4;
+    }
+    .field--note {
+      grid-column: 1 / 2;
+    }
     .field--minutes {
       grid-column: 2 / 4;
-    }
-
-    .field--note {
-      grid-column: 1 / 3;
     }
   }
 
   .entries {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 
     form {
       display: contents;
     }
 
+    .field--minutes {
+      grid-column: 2 / 3;
+    }
+
+    .action--submit {
+      grid-column: 4;
+    }
+
     .action--toggle {
       background: transparent;
-      grid-row: 1;
-      grid-column: 4;
+      grid-row: 2;
+      grid-column: 3;
     }
     .action--delete {
       background: rgb(250, 230, 230);
+      grid-row: 1;
+      grid-column: 4;
     }
 
     .entry:has(.action--toggle[aria-pressed="true"]) {
@@ -228,16 +240,6 @@ const Entry = ({
             .join("")}
         </datalist>
       </div>
-      <div class="field field--minutes">
-        <label for="minutes" class="visually-hidden">Minutes</label>
-        <input
-          type="number"
-          name="minutes"
-          id="minutes"
-          placeholder="Minutes"
-          value="${entry?.tracking?.minutes || entry?.minutes || ""}"
-        />
-      </div>
       <div class="field field--note">
         <label for="note" class="visually-hidden">Note</label>
         <input
@@ -248,8 +250,18 @@ const Entry = ({
           value="${entry?.note ?? ""}"
         />
       </div>
+      <div class="field field--minutes">
+        <label for="minutes" class="visually-hidden">Minutes</label>
+        <input
+          type="number"
+          name="minutes"
+          id="minutes"
+          placeholder="Minutes"
+          value="${entry?.tracking?.minutes || entry?.minutes || ""}"
+        />
+      </div>
 
-      <button type="submit">
+      <button type="submit" class="action action--submit">
         ${entry
           ? Icon({ icon: "💾", label: "Save" })
           : Icon({ icon: "➕", label: "Add" })}
