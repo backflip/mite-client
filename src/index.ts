@@ -1,5 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import {
+  formatMinutes,
   getNextDay,
   getPreviousDay,
   handleError,
@@ -183,7 +184,7 @@ const routes: Routes = {
             return "";
           });
 
-        res.write(`data: ${JSON.stringify(total)}\n\n`);
+        res.write(`data: ${formatMinutes(Number(total))}\n\n`);
       };
 
       res.writeHead(200, {

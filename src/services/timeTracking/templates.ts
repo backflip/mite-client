@@ -3,10 +3,6 @@ import type { Service, TimeEntry } from "../../mite/types.js";
 import type { Routes } from "../../../types.js";
 import html from "../../utils.ts";
 
-const formatMinutes = (minutes: number) => {
-  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
-};
-
 const styles = html`<style>
   :root {
     --page-padding: 0.5rem;

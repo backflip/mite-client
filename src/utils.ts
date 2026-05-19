@@ -84,3 +84,7 @@ export const getPreviousDay = (date?: string) => {
 
   return String(prevDate.toISOString().split("T")[0]);
 };
+
+export const formatMinutes = (minutes: number) => {
+  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
+};
