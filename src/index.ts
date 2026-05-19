@@ -175,7 +175,13 @@ const routes: Routes = {
 
       const interval = 30000;
       const update = async () => {
-        const total = await timeTrackingService.getTotal({ date });
+        const total = await timeTrackingService
+          .getTotal({ date })
+          .catch((err) => {
+            console.log(err);
+
+            return "";
+          });
 
         res.write(`data: ${JSON.stringify(total)}\n\n`);
       };
@@ -194,7 +200,11 @@ const routes: Routes = {
     async handler(req: IncomingMessage, res: ServerResponse) {
       const interval = 30000;
       const update = async () => {
-        const time = await timeTrackingService.getTrackedTime();
+        const time = await timeTrackingService.getTrackedTime().catch((err) => {
+          console.log(err);
+
+          return "";
+        });
 
         res.write(`data: ${JSON.stringify(time)}\n\n`);
       };
