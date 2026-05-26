@@ -396,6 +396,10 @@ export const Page = ({
     isTracking: boolean;
   };
 }) => {
+  const runningTrackerDisclaimer = revenue.isTracking
+    ? "(not including running tracker)"
+    : "";
+
   return html`<!DOCTYPE html>
     <html lang="en">
       <head>
@@ -419,10 +423,15 @@ export const Page = ({
           >
             <dl
               class="revenue${revenue.isTracking ? " revenue--incomplete" : ""}"
+              title="${runningTrackerDisclaimer}"
             >
-              <dt class="visually-hidden">Weekly revenue</dt>
+              <dt class="visually-hidden">
+                Weekly revenue ${runningTrackerDisclaimer}
+              </dt>
               <dd>${revenue.weekly}</dd>
-              <dt class="visually-hidden">Monthly revenue</dt>
+              <dt class="visually-hidden">
+                Monthly revenue ${runningTrackerDisclaimer}
+              </dt>
               <dd>${revenue.monthly}</dd>
             </dl>
             <button type="submit" class="action action--invoice">
