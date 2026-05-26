@@ -155,7 +155,7 @@ export class ApiClient {
   }
 
   async toggleTimeEntry({ timeEntryId }: { timeEntryId: number }) {
-    const currentTracker = await this.getTracker()
+    const currentTracker = await this.getTracker();
 
     if (
       "tracking_time_entry" in currentTracker.tracker &&
@@ -207,6 +207,26 @@ export class ApiClient {
       .map((s) => s.trim());
 
     return { customerName, projectName, minimalServiceName };
+  }
+
+  async getRevenue() {
+    const [weekly, monthly, currentTracker] = await Promise.all([
+      this.getGroupedTimeEntries({ at: "this_week", group_by: "customer" }),
+      this.getGroupedTimeEntries({ at: "this_month", group_by: "customer" }),
+      this.getTracker(),
+    ]);
+
+    const sumUp = (group: Array<{ time_entry_group: TimeEntryGroup }>) =>
+      group.reduce(
+        (acc, customer) => acc + (customer.time_entry_group.revenue ?? 0),
+        0
+      );
+
+    return {
+      weekly: (sumUp(weekly) / 100).toFixed(2),
+      monthly: (sumUp(monthly) / 100).toFixed(2),
+      isTracking: "tracking_time_entry" in currentTracker.tracker,
+    };
   }
 
   async #getProjectFromService(serviceId: number) {

@@ -73,6 +73,7 @@ export type TimeEntryGroup = {
   from: string;
   to: string;
   time_entries_params: Record<string, string>;
+  revenue: number | null;
 } & (
   | {
       user_id: number;

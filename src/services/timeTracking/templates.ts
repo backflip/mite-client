@@ -68,11 +68,33 @@ const styles = html`<style>
       }
     }
 
+    .form--invoice {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.25rem;
+    }
+
     .action--invoice {
       background: transparent;
       appearance: none;
       border: 0;
       padding: 0;
+      width: auto;
+    }
+
+    .revenue {
+      color: #666;
+      font-size: 0.7rem;
+      margin: 0;
+      line-height: 1;
+      text-align: right;
+
+      dd {
+        margin: 0;
+      }
+    }
+    .revenue--incomplete {
+      color: orange;
     }
   }
 
@@ -359,6 +381,7 @@ export const Page = ({
   date,
   prevUrl,
   nextUrl,
+  revenue,
 }: {
   title: string;
   routes: Routes;
@@ -367,6 +390,11 @@ export const Page = ({
   date: string;
   prevUrl: string;
   nextUrl: string;
+  revenue: {
+    weekly: string;
+    monthly: string;
+    isTracking: boolean;
+  };
 }) => {
   return html`<!DOCTYPE html>
     <html lang="en">
@@ -387,8 +415,16 @@ export const Page = ({
           <form
             action="${routes.invoice.path}"
             method="POST"
-            class="link link--invoice"
+            class="form form--invoice"
           >
+            <dl
+              class="revenue${revenue.isTracking ? " revenue--incomplete" : ""}"
+            >
+              <dt class="visually-hidden">Weekly revenue</dt>
+              <dd>${revenue.weekly}</dd>
+              <dt class="visually-hidden">Monthly revenue</dt>
+              <dd>${revenue.monthly}</dd>
+            </dl>
             <button type="submit" class="action action--invoice">
               ${Icon({ icon: "💰", label: "Invoice" })}
             </button>

@@ -49,9 +49,10 @@ const routes: Routes = {
       const nextUrl = new URL(req.url || "", internalHost);
       nextUrl.searchParams.set("date", getNextDay(date));
 
-      const [services, timeEntries] = await Promise.all([
+      const [services, timeEntries, revenue] = await Promise.all([
         apiClient.getServices(),
         apiClient.getTimeEntries({ at: date ?? "today" }),
+        apiClient.getRevenue(),
       ]);
 
       const page = Page({
@@ -64,6 +65,7 @@ const routes: Routes = {
         date: date ?? "today",
         prevUrl: prevUrl.toString().replace(internalHost, ""),
         nextUrl: nextUrl.toString().replace(internalHost, ""),
+        revenue,
       });
 
       res.writeHead(200, { "Content-Type": "text/html" });
