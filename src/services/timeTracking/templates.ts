@@ -7,6 +7,18 @@ const styles = html`<style>
   :root {
     --page-padding: 0.5rem;
 
+    --color-bg: light-dark(rgb(255 255 255), rgb(17 17 17));
+    --color-bg-mute: light-dark(rgb(238 238 238), rgb(34 34 34));
+    --color-border: light-dark(rgb(204 204 204), rgb(68 68 68));
+    --color-text: light-dark(rgb(34 34 34), rgb(238 238 238));
+    --color-text-mute: light-dark(rgb(102 102 102), rgb(153 153 153));
+    --color-text-mute-active: light-dark(rgb(240 150 0), rgb(200 110 0));
+    --color-submit: light-dark(rgb(230 250 230), rgb(40 60 40));
+    --color-active: light-dark(rgb(230 230 250), rgb(40 40 60));
+    --color-delete: light-dark(rgb(250 230 230), rgb(60 40 40));
+
+    color-scheme: light dark;
+
     @media (min-width: 40rem) {
       --page-padding: 1rem;
     }
@@ -24,11 +36,13 @@ const styles = html`<style>
   textarea,
   button {
     padding: 0.75rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
+    background: transparent;
     border-radius: 4px;
     font: inherit;
     width: 100%;
     box-sizing: border-box;
+    color: inherit;
   }
 
   button {
@@ -36,7 +50,7 @@ const styles = html`<style>
     cursor: pointer;
 
     &[type="submit"] {
-      background: rgb(230, 250, 230);
+      background: var(--color-submit);
     }
   }
 
@@ -50,6 +64,8 @@ const styles = html`<style>
     font-family: sans-serif;
     padding: var(--page-padding);
     margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
   }
 
   header {
@@ -83,7 +99,7 @@ const styles = html`<style>
     }
 
     .revenue {
-      color: #666;
+      color: var(--color-text-mute);
       font-size: 0.7rem;
       margin: 0;
       line-height: 1;
@@ -94,7 +110,7 @@ const styles = html`<style>
       }
     }
     .revenue--incomplete {
-      color: orange;
+      color: var(--color-text-mute-active);
     }
   }
 
@@ -109,7 +125,7 @@ const styles = html`<style>
   }
 
   .add {
-    background: rgb(230, 230, 230);
+    background: var(--color-bg-mute);
     margin: calc(-1 * var(--page-padding));
     margin-block-end: 1.5rem;
     padding: var(--page-padding);
@@ -150,7 +166,7 @@ const styles = html`<style>
       grid-column: 3;
     }
     .action--delete {
-      background: rgb(250, 230, 230);
+      background: var(--color-delete);
       grid-row: 1;
       grid-column: 4;
     }
@@ -158,7 +174,7 @@ const styles = html`<style>
     .entry:has(.action--toggle[aria-pressed="true"]) {
       .field--minutes input,
       .action--toggle {
-        background: rgb(230, 230, 250);
+        background: var(--color-active);
       }
     }
   }
