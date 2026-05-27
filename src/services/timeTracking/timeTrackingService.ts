@@ -1,4 +1,5 @@
 import type { ApiClient } from "../../mite/apiClient.ts";
+import { parseMinutes } from "../../utils.ts";
 
 type Param = ReturnType<URLSearchParams["get"]>;
 
@@ -23,7 +24,7 @@ export class TimeTrackingService {
     const matchedService = await this.#apiClient.getService(serviceId ?? "");
     const { time_entry: entry } = await this.#apiClient.addTimeEntry({
       serviceId: matchedService.id,
-      minutes: minutes ? Number(minutes) : 0,
+      minutes: minutes ? parseMinutes(minutes) : 0,
       note,
       date,
     });
@@ -53,7 +54,7 @@ export class TimeTrackingService {
     await this.#apiClient.editTimeEntry({
       timeEntryId: Number(timeEntryId),
       serviceId: matchedService.id,
-      minutes: minutes ? Number(minutes) : 0,
+      minutes: minutes ? parseMinutes(minutes) : 0,
       note,
       date,
     });

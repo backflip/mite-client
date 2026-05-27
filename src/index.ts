@@ -209,7 +209,7 @@ const routes: Routes = {
           return "";
         });
 
-        res.write(`data: ${JSON.stringify(time)}\n\n`);
+        res.write(`data: ${formatMinutes(Number(time))}\n\n`);
       };
 
       res.writeHead(200, {

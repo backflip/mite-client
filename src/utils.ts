@@ -88,3 +88,11 @@ export const getPreviousDay = (date?: string) => {
 export const formatMinutes = (minutes: number) => {
   return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
 };
+
+export const parseMinutes = (minutes: string) => {
+  const parts = minutes.split(":").map(Number);
+  const mins = parts.pop() ?? 0;
+  const hours = parts.pop() ?? 0;
+
+  return hours * 60 + mins;
+};

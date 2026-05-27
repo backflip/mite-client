@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Service, TimeEntry } from "../../mite/types.js";
 import type { Routes } from "../../../types.js";
-import html from "../../utils.ts";
+import html, { formatMinutes } from "../../utils.ts";
 
 const styles = html`<style>
   :root {
@@ -268,6 +268,18 @@ const Icon = ({ icon, label }: { icon: string; label: string }) => {
     <span id="${id}" class="visually-hidden">${label}</span>`;
 };
 
+const MinutesInput = ({ minutes }: { minutes: number }) => {
+  return html`<input
+    type="text"
+    inputmode="numeric"
+    pattern="(?:[0-9]*:)?(?:[0-5])?[0-9]"
+    name="minutes"
+    id="minutes"
+    placeholder="Minutes"
+    value="${formatMinutes(minutes)}"
+  />`;
+};
+
 const Entry = ({
   routes,
   services,
@@ -326,21 +338,13 @@ const Entry = ({
         <label for="minutes" class="visually-hidden">Minutes</label>
         ${entry?.tracking
           ? html`<mite-tracking>
-              <input
-                type="number"
-                name="minutes"
-                id="minutes"
-                placeholder="Minutes"
-                value="${entry?.tracking?.minutes || entry?.minutes || ""}"
-              />
+              ${MinutesInput({
+                minutes: entry.tracking.minutes || entry?.minutes || 0,
+              })}
             </mite-tracking>`
-          : html`<input
-              type="number"
-              name="minutes"
-              id="minutes"
-              placeholder="Minutes"
-              value="${entry?.tracking?.minutes || entry?.minutes || ""}"
-            />`}
+          : MinutesInput({
+              minutes: entry?.tracking?.minutes || entry?.minutes || 0,
+            })}
       </div>
 
       <button type="submit" class="action action--submit">
