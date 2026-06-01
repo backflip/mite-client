@@ -137,12 +137,14 @@ const styles = html`<style>
 </style>`;
 
 export const Page = ({
+  project,
   services,
   customer,
   company,
   month,
   number,
 }: {
+  project: string;
   services: Array<{ service: string; minutes: number; rate: number }>;
   customer: { name: string; address: string[] };
   company: {
@@ -208,7 +210,7 @@ export const Page = ({
             <dt>Zahlungsfrist</dt>
             <dd>${dueDateFormatted}</dd>
             <dt>Betreff</dt>
-            <dd>Rechnung ${customer.name} ${month}</dd>
+            <dd>${project} ${month}</dd>
           </dl>
         </header>
 
