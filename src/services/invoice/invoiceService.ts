@@ -133,7 +133,9 @@ export class InvoiceService {
   }
 
   async #createPdf(html: string) {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox"],
+    });
     const page = await browser.newPage();
 
     await page.goto(`data:text/html,${html}`, {
