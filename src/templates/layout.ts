@@ -126,6 +126,103 @@ const styles = html`<style>
   }
 </style>`;
 
+const scripts = html`<script type="module">
+  /**
+   * Update total time using event stream
+   */
+  class MiteTotal extends HTMLElement {
+    static observedAttributes = ["date"];
+
+    evenSource;
+
+    connectedCallback() {
+      this.render();
+    }
+
+    render() {
+      const date = this.attributes.date.value;
+
+      if (this.eventSource) {
+        this.eventSource.close();
+      }
+
+      this.eventSource = new EventSource("/total?date=" + date);
+
+      this.eventSource.addEventListener(
+        "message",
+        (event) => (this.innerHTML = event.data)
+      );
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      this.render();
+    }
+  }
+
+  customElements.define("mite-total", MiteTotal);
+
+  /**
+   * Update tracking time using event stream
+   */
+  class MiteTracking extends HTMLElement {
+    connectedCallback() {
+      const input = this.querySelector("input");
+      const eventSource = new EventSource("/tracking");
+
+      eventSource.addEventListener(
+        "message",
+        (event) => (input.value = event.data)
+      );
+    }
+  }
+
+  customElements.define("mite-tracking", MiteTracking);
+
+  /**
+   * Keyboard navigation
+   */
+  document.addEventListener("keydown", (event) => {
+    if (event.target.matches("input, textarea, select")) {
+      return;
+    }
+
+    switch (event.key) {
+      case "h":
+        const homeLink = document.querySelector(".link--home");
+
+        if (homeLink) {
+          homeLink.click();
+        }
+
+        break;
+      case "i":
+        const invoiceButton = document.querySelector(".action--invoice");
+
+        if (invoiceButton) {
+          invoiceButton.click();
+        }
+
+        break;
+      case "ArrowLeft":
+        const prevLink = document.querySelector(".link--prev");
+
+        if (prevLink) {
+          prevLink.click();
+        }
+
+        break;
+      case "ArrowRight":
+        const nextLink = document.querySelector(".link--next");
+
+        if (nextLink) {
+          nextLink.click();
+        }
+
+        break;
+    }
+  });
+</script>`;
+
 export const Icon = ({ icon, label }: { icon: string; label: string }) => {
   const id = randomUUID();
 
@@ -173,7 +270,7 @@ export const Layout = async ({
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${title} – Mite Client</title>
-        ${styles} ${customStyles} ${customScripts}
+        ${styles} ${customStyles} ${scripts} ${customScripts}
       </head>
       <body>
         <header>

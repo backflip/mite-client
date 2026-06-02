@@ -1,7 +1,6 @@
 import type { Service, TimeEntry } from "../../mite/types.js";
 import type { GetPage, Routes } from "../../../types.js";
-import html, { formatMinutes, getDate, getInternalUrl } from "../../utils.ts";
-import type { IncomingMessage } from "node:http";
+import html, { formatMinutes, getDate } from "../../utils.ts";
 import { Icon } from "../../templates/layout.ts";
 
 const customStyles = html`<style>
@@ -70,103 +69,6 @@ const customStyles = html`<style>
     }
   }
 </style>`;
-
-const customScripts = html`<script type="module">
-  /**
-   * Update total time using event stream
-   */
-  class MiteTotal extends HTMLElement {
-    static observedAttributes = ["date"];
-
-    evenSource;
-
-    connectedCallback() {
-      this.render();
-    }
-
-    render() {
-      const date = this.attributes.date.value;
-
-      if (this.eventSource) {
-        this.eventSource.close();
-      }
-
-      this.eventSource = new EventSource("/total?date=" + date);
-
-      this.eventSource.addEventListener(
-        "message",
-        (event) => (this.innerHTML = event.data)
-      );
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-      this.render();
-    }
-  }
-
-  customElements.define("mite-total", MiteTotal);
-
-  /**
-   * Update tracking time using event stream
-   */
-  class MiteTracking extends HTMLElement {
-    connectedCallback() {
-      const input = this.querySelector("input");
-      const eventSource = new EventSource("/tracking");
-
-      eventSource.addEventListener(
-        "message",
-        (event) => (input.value = event.data)
-      );
-    }
-  }
-
-  customElements.define("mite-tracking", MiteTracking);
-
-  /**
-   * Keyboard navigation
-   */
-  document.addEventListener("keydown", (event) => {
-    if (event.target.matches("input, textarea, select")) {
-      return;
-    }
-
-    switch (event.key) {
-      case "h":
-        const homeLink = document.querySelector(".link--home");
-
-        if (homeLink) {
-          homeLink.click();
-        }
-
-        break;
-      case "i":
-        const invoiceButton = document.querySelector(".action--invoice");
-
-        if (invoiceButton) {
-          invoiceButton.click();
-        }
-
-        break;
-      case "ArrowLeft":
-        const prevLink = document.querySelector(".link--prev");
-
-        if (prevLink) {
-          prevLink.click();
-        }
-
-        break;
-      case "ArrowRight":
-        const nextLink = document.querySelector(".link--next");
-
-        if (nextLink) {
-          nextLink.click();
-        }
-
-        break;
-    }
-  });
-</script>`;
 
 const MinutesInput = ({ minutes }: { minutes: number }) => {
   return html`<input
@@ -277,18 +179,10 @@ const Entry = ({
       : ""}`;
 };
 
-export const Page: GetPage = async ({
-  req,
-  routes,
-  props: { services, timeEntries },
-}: {
-  req: IncomingMessage;
-  routes: Routes;
-  props: {
-    services: Service[];
-    timeEntries: TimeEntry[];
-  };
-}) => {
+export const Page: GetPage<{
+  services: Service[];
+  timeEntries: TimeEntry[];
+}> = async ({ req, routes, props: { services, timeEntries } }) => {
   const date = getDate(req);
   const content = html`<div class="add">
       ${Entry({
@@ -318,6 +212,5 @@ export const Page: GetPage = async ({
   return {
     content,
     customStyles,
-    customScripts,
   };
 };

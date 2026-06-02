@@ -14,14 +14,14 @@ export type Routes = {
   tracking: Route;
 };
 
-export type GetPage = ({
+export type GetPage<Props> = ({
   req,
   routes,
   props,
 }: {
   req: IncomingMessage;
   routes: Routes;
-  props: any;
+  props: Props;
 }) => Promise<{
   content: string;
   customStyles?: string;
