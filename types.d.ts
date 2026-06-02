@@ -9,7 +9,9 @@ export type Routes = {
   edit: Route;
   toggle: Route;
   delete: Route;
+  invoices: Route;
   invoice: Route;
+  invoicePaid: Route;
   total: Route;
   tracking: Route;
 };
@@ -25,5 +27,15 @@ export type GetPage<Props> = ({
 }) => Promise<{
   content: string;
   customStyles?: string;
-  customScritps?: string;
+  customScripts?: string;
 }>;
+
+export type Invoice = {
+  id: number;
+  year: number;
+  month: number;
+  amount: number;
+  dateCreated: Date;
+  dateDue: Date;
+  datePaid?: Date;
+};

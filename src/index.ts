@@ -14,6 +14,7 @@ import type { Routes } from "../types.js";
 import type { TimeEntry } from "./mite/types.js";
 import { InvoiceService } from "./services/invoice/invoiceService.ts";
 import { TimeTrackingService } from "./services/timeTracking/timeTrackingService.ts";
+import { Listing } from "./services/invoice/templates.ts";
 import { Layout } from "./templates/layout.ts";
 
 const { MITE_API_KEY, MITE_ACCOUNT_NAME } = process.env;
@@ -151,6 +152,30 @@ const routes: Routes = {
       return handleRootRedirect(res, date ?? undefined);
     },
   },
+  invoices: {
+    path: "/invoices",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      const invoices = await apiClient.getInvoices();
+      const page = await Listing({
+        req,
+        routes,
+        props: {
+          invoices,
+        },
+      });
+
+      const html = await Layout({
+        ...page,
+        req,
+        routes,
+        apiClient,
+        title: "Rechnungen",
+      });
+
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(html);
+    },
+  },
   invoice: {
     path: "/invoice",
     async handler(req: IncomingMessage, res: ServerResponse) {
@@ -158,13 +183,39 @@ const routes: Routes = {
         throw new Error("Method Not Allowed");
       }
 
-      const zip = await invoiceService.getInvoices();
+      const zip = await invoiceService.createInvoices();
 
       res.writeHead(200, {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="invoices.zip"`,
       });
       res.end(zip);
+    },
+  },
+  invoicePaid: {
+    path: "/invoice-paid",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      if (req.method !== "POST") {
+        throw new Error("Method Not Allowed");
+      }
+
+      const params = await parseBody(req);
+      const invoiceId = params.get("id");
+
+      if (!invoiceId) {
+        throw new Error(`Missing "id"`);
+      }
+
+      const datePaidInput = params.get("date");
+      const datePaid = datePaidInput ? new Date(datePaidInput) : new Date();
+
+      await apiClient.markInvoiceAsPaid({
+        invoiceId: Number(invoiceId),
+        datePaid,
+      });
+
+      res.writeHead(302, { location: routes.invoices.path });
+      res.end();
     },
   },
   total: {

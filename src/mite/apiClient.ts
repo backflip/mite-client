@@ -1,3 +1,4 @@
+import type { Invoice } from "../../types.js";
 import type {
   Customer,
   GroupedTimeEntriesQuery,
@@ -226,6 +227,115 @@ export class ApiClient {
       weekly: (sumUp(weekly) / 100).toFixed(2),
       monthly: (sumUp(monthly) / 100).toFixed(2),
       isTracking: "tracking_time_entry" in currentTracker.tracker,
+    };
+  }
+
+  async getInvoices() {
+    const projects = await this.getProjects();
+    const invoices = [];
+
+    for (const project of projects) {
+      const parsedNote = this.#parseProjectNote(project.project.note);
+
+      invoices.push(
+        ...parsedNote.invoices.map((invoice) => ({
+          invoice: {
+            ...invoice,
+            dateCreated: new Date(invoice.dateCreated),
+            dateDue: new Date(invoice.dateDue),
+            datePaid: invoice.datePaid ? new Date(invoice.datePaid) : undefined,
+          } as Invoice,
+          project: project.project,
+        }))
+      );
+    }
+
+    return invoices;
+  }
+
+  async addInvoice({
+    projectId,
+    invoice,
+  }: {
+    projectId: number;
+    invoice: Invoice;
+  }) {
+    const project = await this.fetch(`projects/${projectId}.json`);
+    const invoices = await this.getInvoices();
+
+    if (
+      invoices.find(
+        (existingInvoice) => existingInvoice.invoice.id === invoice.id
+      )
+    ) {
+      throw new Error(`Invoice with ID ${invoice.id} already exists`);
+    }
+
+    const parsedNote = this.#parseProjectNote(project!.project.note);
+    const note = {
+      ...parsedNote,
+      invoices: parsedNote.invoices.concat([invoice]),
+    };
+
+    return this.fetch(`projects/${projectId}.json`, {
+      method: "PATCH",
+      body: {
+        note: JSON.stringify(note, null, "\t"),
+      },
+    }) as Promise<null>;
+  }
+
+  async markInvoiceAsPaid({
+    invoiceId,
+    datePaid,
+  }: {
+    invoiceId: Invoice["id"];
+    datePaid: Date;
+  }) {
+    const invoices = await this.getInvoices();
+    const invoice = invoices.find(
+      (existingInvoice) => existingInvoice.invoice.id === invoiceId
+    );
+
+    if (!invoice) {
+      throw new Error(`Invoice with ID ${invoiceId} not found`);
+    }
+
+    if (invoice.invoice.datePaid) {
+      throw new Error(
+        `Invoice with ID ${invoiceId} has already been marked as paid`
+      );
+    }
+
+    const parsedNote = this.#parseProjectNote(invoice.project.note);
+    const note = {
+      ...parsedNote,
+      invoices: parsedNote.invoices.map((existingInvoice) => {
+        if (existingInvoice.id === invoiceId) {
+          return {
+            ...existingInvoice,
+            datePaid,
+          };
+        }
+
+        return existingInvoice;
+      }),
+    };
+
+    return this.fetch(`projects/${invoice.project.id}.json`, {
+      method: "PATCH",
+      body: {
+        note: JSON.stringify(note, null, "\t"),
+      },
+    }) as Promise<null>;
+  }
+
+  #parseProjectNote(note: string): { invoices: Invoice[] } {
+    const parsed = JSON.parse(note || "{}");
+
+    return {
+      ...parsed,
+      invoices: parsed.invoices || [],
     };
   }
 

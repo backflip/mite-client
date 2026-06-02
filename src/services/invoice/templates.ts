@@ -1,4 +1,8 @@
+import type { GetPage, Invoice } from "../../../types.js";
+import type { Project } from "../../mite/types.js";
 import html from "../../utils.ts";
+import config from "../../../config.json" with { type: "json" };
+import { Icon } from "../../templates/layout.ts";
 
 const formatDate = (date: Date = new Date()) =>
   date.toLocaleDateString("de-CH", {
@@ -7,7 +11,7 @@ const formatDate = (date: Date = new Date()) =>
     year: "numeric",
   });
 
-const styles = html`<style>
+const pdfStyles = html`<style>
   :root {
     --accent-color: lightgray;
     --line-color: lightgray;
@@ -136,15 +140,20 @@ const styles = html`<style>
   }
 </style>`;
 
-export const Page = ({
+export const Pdf = ({
   project,
+  invoice,
+  total,
+  vat,
   services,
   customer,
   company,
   month,
-  number,
 }: {
-  project: string;
+  project: Project;
+  invoice: Invoice;
+  total: number;
+  vat: number;
   services: Array<{ service: string; minutes: number; rate: number }>;
   customer: { name: string; address: string[] };
   company: {
@@ -154,28 +163,13 @@ export const Page = ({
     uid: string;
   };
   month: string;
-  number: string;
 }) => {
-  const VAT = 8.1;
-  const DEADLINE = 30;
-
-  const total = services.reduce(
-    (sum, { minutes, rate }) => sum + rate * (minutes / 60),
-    0
-  );
-  const vat = total * (VAT / 100);
-  const dateFormatted = formatDate();
-
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + DEADLINE);
-  const dueDateFormatted = formatDate(dueDate);
-
   return html`<!DOCTYPE html>
     <html lang="de">
       <head>
         <meta charset="UTF-8" />
         <title>Rechnung</title>
-        ${styles}
+        ${pdfStyles}
       </head>
       <body>
         <header>
@@ -204,13 +198,13 @@ export const Page = ({
 
           <dl class="details">
             <dt>Rechnungsnummer</dt>
-            <dd>${number}</dd>
+            <dd>${invoice.id}</dd>
             <dt>Rechnungsdatum</dt>
-            <dd>${dateFormatted}</dd>
+            <dd>${formatDate(invoice.dateCreated)}</dd>
             <dt>Zahlungsfrist</dt>
-            <dd>${dueDateFormatted}</dd>
+            <dd>${formatDate(invoice.dateDue)}</dd>
             <dt>Betreff</dt>
-            <dd>${project} ${month}</dd>
+            <dd>${project.name} ${month}</dd>
           </dl>
         </header>
 
@@ -242,7 +236,7 @@ export const Page = ({
               <td>CHF ${total.toFixed(2)}</td>
             </tr>
             <tr>
-              <th colspan="3">MWST (${VAT}%)</th>
+              <th colspan="3">MWST (${config.vat}%)</th>
               <td>CHF ${vat.toFixed(2)}</td>
             </tr>
             <tr>
@@ -262,4 +256,105 @@ export const Page = ({
         </footer>
       </body>
     </html>`;
+};
+
+const listingStyles = html`<style>
+  .form--invoice {
+    display: flex;
+    margin-block-end: 2rem;
+
+    button {
+      margin-inline-start: auto;
+      padding: 0.5rem 1rem;
+      width: auto;
+    }
+  }
+
+  .form--paid {
+    display: inline-flex;
+
+    input {
+      border-bottom-right-radius: 0;
+      border-top-right-radius: 0;
+      border-inline-end: 0;
+    }
+
+    button {
+      border-bottom-left-radius: 0;
+      border-top-left-radius: 0;
+    }
+  }
+</style>`;
+
+export const Listing: GetPage<{
+  invoices: Array<{
+    project: Project;
+    invoice: Invoice;
+  }>;
+}> = async ({ req, routes, props: { invoices } }) => {
+  const sortedInvoices = invoices.sort(
+    (a, b) => b.invoice.dateCreated.getTime() - a.invoice.dateCreated.getTime()
+  );
+
+  const content = html`<form
+      action="/invoice"
+      method="POST"
+      class="form form--invoice"
+    >
+      <button type="submit">Rechnungen erstellen</button>
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Projekt</th>
+          <th>Betrag</th>
+          <th>Rechnungsdatum</th>
+          <th>Zahlungsfrist</th>
+          <th>Zahlungseingang</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sortedInvoices
+          .map(
+            ({ invoice, project }) =>
+              html`<tr class="${invoice.datePaid ? "" : "unpaid"}">
+                <td>${invoice.id}</td>
+                <td>${project.customer_name} :: ${project.name}</td>
+                <td>CHF ${invoice.amount.toFixed(2)}</td>
+                <td>${formatDate(invoice.dateCreated)}</td>
+                <td>${formatDate(invoice.dateDue)}</td>
+                <td>
+                  ${invoice.datePaid
+                    ? formatDate(invoice.datePaid)
+                    : html`<form
+                        action="/invoice-paid"
+                        method="POST"
+                        class="form form--paid"
+                      >
+                        <input type="hidden" name="id" value="${invoice.id}" />
+                        <div>
+                          <label for="date" class="visually-hidden"
+                            >Datum</label
+                          >
+                          <input type="date" name="date" id="date" />
+                        </div>
+                        <button type="submit">
+                          ${Icon({
+                            icon: "✅",
+                            label: "Bezahlt",
+                          })}
+                        </button>
+                      </form>`}
+                </td>
+              </tr>`
+          )
+          .join("")}
+      </tbody>
+    </table>`;
+
+  return {
+    content,
+    customStyles: listingStyles,
+  };
 };

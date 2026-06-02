@@ -9,6 +9,7 @@ Features:
 - Minimal time tracking UI.
 - [Server-sent event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) endpoint for current timer.
 - One-click PDF invoice generation using [Puppeteer](https://pptr.dev).
+- Invoice data persistence in project `note` field.
 
 The goal is to use it for a minimal [Tauri](https://tauri.app) menubar app because [mite.nano](https://mite.de/blog/2021/10/13/mite-nano-app-macos/) is missing the possibility to add notes.
 
@@ -40,3 +41,4 @@ fly deploy
 ## Notes
 
 - Expects Mite service names to use the following pattern: `Customer Name :: Project Name :: Service Name`
+- Persists project invoice data as stringified JSON to a project's `note` field

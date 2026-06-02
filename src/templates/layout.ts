@@ -71,6 +71,29 @@ const styles = html`<style>
     padding: 0;
   }
 
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.5rem 0.5rem 0.5rem 0;
+    }
+
+    tbody {
+      td {
+        border-top: 1px solid var(--color-border);
+      }
+
+      tr:last-child {
+        td {
+          border-bottom: 1px solid var(--color-border);
+        }
+      }
+    }
+  }
+
   body {
     font-family: sans-serif;
     padding: var(--page-padding);
@@ -281,28 +304,22 @@ export const Layout = async ({
             ${title}
             <span>(<mite-total date="${date || "today"}"></mite-total>)</span>
           </h1>
-          <form
-            action="${routes.invoice.path}"
-            method="POST"
-            class="form form--invoice"
+          <dl
+            class="revenue${revenue.isTracking ? " revenue--incomplete" : ""}"
+            title="${runningTrackerDisclaimer}"
           >
-            <dl
-              class="revenue${revenue.isTracking ? " revenue--incomplete" : ""}"
-              title="${runningTrackerDisclaimer}"
-            >
-              <dt class="visually-hidden">
-                Weekly revenue ${runningTrackerDisclaimer}
-              </dt>
-              <dd>${revenue.weekly}</dd>
-              <dt class="visually-hidden">
-                Monthly revenue ${runningTrackerDisclaimer}
-              </dt>
-              <dd>${revenue.monthly}</dd>
-            </dl>
-            <button type="submit" class="action action--invoice">
-              ${Icon({ icon: "💰", label: "Invoice" })}
-            </button>
-          </form>
+            <dt class="visually-hidden">
+              Weekly revenue ${runningTrackerDisclaimer}
+            </dt>
+            <dd>${revenue.weekly}</dd>
+            <dt class="visually-hidden">
+              Monthly revenue ${runningTrackerDisclaimer}
+            </dt>
+            <dd>${revenue.monthly}</dd>
+          </dl>
+          <a href="${routes.invoices.path}" class="link link--invoice">
+            ${Icon({ icon: "💰", label: "Invoice" })}
+          </a>
           <a href="${getRelativeUrl(rootUrl)}" class="link link--home"
             >${Icon({ icon: "🏠", label: "Home" })}</a
           >

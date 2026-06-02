@@ -1,8 +1,9 @@
 import puppeteer from "puppeteer";
 import type { ApiClient } from "../../mite/apiClient.ts";
 import { BlobReader, BlobWriter, ZipWriter } from "@zip.js/zip.js";
-import { Page } from "./templates.ts";
+import { Pdf } from "./templates.ts";
 import config from "../../../config.json" with { type: "json" };
+import type { Invoice } from "../../../types.js";
 
 export class InvoiceService {
   #apiClient: ApiClient;
@@ -11,7 +12,7 @@ export class InvoiceService {
     this.#apiClient = apiClient;
   }
 
-  async getInvoices() {
+  async createInvoices() {
     const lastMonth = new Date().getDate() < 15;
 
     const query = {
@@ -28,12 +29,13 @@ export class InvoiceService {
       throw new Error("Timer is running");
     }
 
-    const [entryGroups, allCustomers, allProjects, allServices] =
+    const [entryGroups, allCustomers, allProjects, allServices, allInvoices] =
       await Promise.all([
         this.#apiClient.getGroupedTimeEntries(query),
         this.#apiClient.getCustomers(),
         this.#apiClient.getProjects(),
         this.#apiClient.getServices(),
+        this.#apiClient.getInvoices(),
       ]);
 
     const projects = Object.groupBy(
@@ -78,22 +80,43 @@ export class InvoiceService {
               project.hourly_rate ||
               customer.hourly_rate ||
               0) / 100,
-          project: String(projectName),
           customer: {
             name: customer.name,
             address: customer?.note?.split("\r\n") ?? [],
           },
+          project,
         };
       }),
-      ({ project }) => project
+      ({ project }) => project.name
     );
 
+    const lastId =
+      allInvoices
+        .map((invoice) => invoice.invoice.id)
+        .sort((a, b) => b - a)[0] || config.lastInvoiceId;
+    const year = new Date().getFullYear();
     const month = new Date().getMonth() - (lastMonth ? 1 : 0);
     const monthName = this.#getMonthName(month);
 
     const pdfs = await Promise.all(
       Object.values(projects)
         .filter((services) => services?.some(({ billable }) => billable))
+        .filter((services) => {
+          const { customer, project } = services?.[0] ?? {};
+
+          if (!customer || !project) {
+            throw new Error("Customer or project not found");
+          }
+
+          const existingInvoice = allInvoices.find(
+            (invoice) =>
+              invoice.project.id === project.id &&
+              invoice.invoice.year === year &&
+              invoice.invoice.month === month
+          );
+
+          return !existingInvoice;
+        })
         .map(async (services, index) => {
           const { customer, project } = services?.[0] ?? {};
 
@@ -101,36 +124,75 @@ export class InvoiceService {
             throw new Error("Customer or project not found");
           }
 
-          const number = `${new Date().getFullYear()}-${String(month + 1).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}`;
+          const id = lastId + index + 1;
+          const dateCreated = new Date();
+          const dateDue = this.getDueDate(dateCreated);
 
-          const markup = Page({
-            project: services?.[0]?.project || "",
-            services:
-              services
-                ?.filter(({ billable }) => billable)
-                .map(({ service, minutes, rate }) => ({
-                  service,
-                  minutes,
-                  rate,
-                })) ?? [],
+          const invoicedServices =
+            services
+              ?.filter(({ billable }) => billable)
+              .map(({ service, minutes, rate }) => ({
+                service,
+                minutes,
+                rate,
+              })) ?? [];
+          const total = invoicedServices.reduce(
+            (sum, { minutes, rate }) => sum + rate * (minutes / 60),
+            0
+          );
+          const vat = total * (config.vat / 100);
+
+          const invoice: Invoice = {
+            id,
+            amount: total + vat,
+            year,
+            month,
+            dateCreated,
+            dateDue,
+          };
+
+          const markup = Pdf({
+            invoice,
+            project,
+            services: invoicedServices,
             month: monthName,
+            total,
+            vat,
             customer,
-            number,
             company: config.company,
           });
           const content = await this.#createPdf(markup);
-          const name = `${this.#formatFileNamePart(customer?.name)}_${this.#formatFileNamePart(project)}_${this.#formatFileNamePart(monthName)}_responsivech_GmbH.pdf`;
+          const name = `${this.#formatFileNamePart(customer?.name)}_${this.#formatFileNamePart(project.name)}_${this.#formatFileNamePart(monthName)}_${this.#formatFileNamePart(config.company.name)}.pdf`;
 
           return {
+            invoice,
+            project,
             name,
             content,
           };
         })
     );
 
+    for (const pdf of pdfs) {
+      await this.#apiClient.addInvoice({
+        projectId: pdf.project.id,
+        invoice: pdf.invoice,
+      });
+    }
+
     const zip = await this.#createZip(pdfs);
 
+    console.log(`Created ${pdfs.length} invoices`);
+
     return Buffer.from(await zip.arrayBuffer());
+  }
+
+  getDueDate(date: Date) {
+    const dueDate = new Date(date);
+
+    dueDate.setDate(dueDate.getDate() + config.invoiceDeadline);
+
+    return dueDate;
   }
 
   async #createPdf(html: string) {
