@@ -1,5 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
+const { PORT } = process.env;
+
+export const port = PORT ? Number(PORT) : 3000;
+
 /**
  * Allow for syntax highlighting in template strings
  * E.g. via https://marketplace.visualstudio.com/items?itemName=bierner.lit-html
@@ -70,7 +74,7 @@ export const requireBasicAuth = (
 };
 
 export const getNextDay = (date?: string) => {
-  const nextDate = date ? new Date(date) : new Date();
+  const nextDate = date && date !== "today" ? new Date(date) : new Date();
 
   nextDate.setDate(nextDate.getDate() + 1);
 
@@ -78,7 +82,7 @@ export const getNextDay = (date?: string) => {
 };
 
 export const getPreviousDay = (date?: string) => {
-  const prevDate = date ? new Date(date) : new Date();
+  const prevDate = date && date !== "today" ? new Date(date) : new Date();
 
   prevDate.setDate(prevDate.getDate() - 1);
 
@@ -95,4 +99,21 @@ export const parseMinutes = (minutes: string) => {
   const hours = parts.pop() ?? 0;
 
   return hours * 60 + mins;
+};
+
+export const getInternalUrl = (req: IncomingMessage) => {
+  const url = new URL(req.url || "", `http://localhost:${port}`);
+
+  return url;
+};
+
+export const getRelativeUrl = (url: URL) => {
+  return url.toString().replace(url.origin, "");
+};
+
+export const getDate = (req: IncomingMessage) => {
+  const url = getInternalUrl(req);
+  const date = url.searchParams.get("date") ?? "today";
+
+  return date;
 };

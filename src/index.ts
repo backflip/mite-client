@@ -1,12 +1,12 @@
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import {
   formatMinutes,
-  getNextDay,
-  getPreviousDay,
   handleError,
   handleRootRedirect,
   parseBody,
   requireBasicAuth,
+  port,
+  getDate,
 } from "./utils.ts";
 import { ApiClient } from "./mite/apiClient.ts";
 import { Page } from "./services/timeTracking/templates.ts";
@@ -14,8 +14,9 @@ import type { Routes } from "../types.js";
 import type { TimeEntry } from "./mite/types.js";
 import { InvoiceService } from "./services/invoice/invoiceService.ts";
 import { TimeTrackingService } from "./services/timeTracking/timeTrackingService.ts";
+import { Layout } from "./templates/layout.ts";
 
-const { MITE_API_KEY, MITE_ACCOUNT_NAME, PORT } = process.env;
+const { MITE_API_KEY, MITE_ACCOUNT_NAME } = process.env;
 
 if (!MITE_API_KEY) {
   throw new Error("process.env.MITE_API_KEY missing");
@@ -25,7 +26,6 @@ if (!MITE_ACCOUNT_NAME) {
   throw new Error("process.env.MITE_ACCOUNT_NAME missing");
 }
 
-const port = PORT ? Number(PORT) : 3000;
 const internalHost = `http://localhost:${port}`;
 
 const apiClient = new ApiClient({
@@ -40,36 +40,33 @@ const routes: Routes = {
   root: {
     path: "/",
     async handler(req: IncomingMessage, res: ServerResponse) {
-      const url = new URL(req.url || "", internalHost);
-      const date = url.searchParams.get("date") ?? undefined;
+      const date = getDate(req);
 
-      const prevUrl = new URL(req.url || "", internalHost);
-      prevUrl.searchParams.set("date", getPreviousDay(date));
-
-      const nextUrl = new URL(req.url || "", internalHost);
-      nextUrl.searchParams.set("date", getNextDay(date));
-
-      const [services, timeEntries, revenue] = await Promise.all([
+      const [services, timeEntries] = await Promise.all([
         apiClient.getServices(),
-        apiClient.getTimeEntries({ at: date ?? "today" }),
-        apiClient.getRevenue(),
+        apiClient.getTimeEntries({ at: date }),
       ]);
 
-      const page = Page({
-        title: "Mite Client",
+      const page = await Page({
+        req,
         routes,
-        services: services.map(({ service }) => service),
-        timeEntries: (timeEntries as Array<{ time_entry: TimeEntry }>).map(
-          ({ time_entry }) => time_entry
-        ),
-        date: date ?? "today",
-        prevUrl: prevUrl.toString().replace(internalHost, ""),
-        nextUrl: nextUrl.toString().replace(internalHost, ""),
-        revenue,
+        props: {
+          services: services.map(({ service }) => service),
+          timeEntries: (timeEntries as Array<{ time_entry: TimeEntry }>).map(
+            ({ time_entry }) => time_entry
+          ),
+        },
+      });
+      const html = await Layout({
+        ...page,
+        req,
+        routes,
+        apiClient,
+        title: date,
       });
 
       res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(page);
+      res.end(html);
     },
   },
   add: {

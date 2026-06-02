@@ -13,3 +13,17 @@ export type Routes = {
   total: Route;
   tracking: Route;
 };
+
+export type GetPage = ({
+  req,
+  routes,
+  props,
+}: {
+  req: IncomingMessage;
+  routes: Routes;
+  props: any;
+}) => Promise<{
+  content: string;
+  customStyles?: string;
+  customScritps?: string;
+}>;
