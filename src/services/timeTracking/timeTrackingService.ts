@@ -29,7 +29,8 @@ export class TimeTrackingService {
       date,
     });
 
-    if (!minutes) {
+    // Auto-start unless minutes have been entered
+    if (minutes === "0:00") {
       await this.#apiClient.toggleTimeEntry({ timeEntryId: entry.id });
     }
 
