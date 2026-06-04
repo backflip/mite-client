@@ -1,4 +1,4 @@
-import type { Invoice } from "../../types.js";
+import type { Invoice, InvoiceEmail } from "../../types.js";
 import type {
   Customer,
   GroupedTimeEntriesQuery,
@@ -246,6 +246,7 @@ export class ApiClient {
             datePaid: invoice.datePaid ? new Date(invoice.datePaid) : undefined,
           } as Invoice,
           project: project.project,
+          invoiceEmail: parsedNote.invoiceEmail,
         }))
       );
     }
@@ -330,7 +331,10 @@ export class ApiClient {
     }) as Promise<null>;
   }
 
-  #parseProjectNote(note: string): { invoices: Invoice[] } {
+  #parseProjectNote(note: string): {
+    invoices: Invoice[];
+    invoiceEmail?: InvoiceEmail;
+  } {
     const parsed = JSON.parse(note || "{}");
 
     return {

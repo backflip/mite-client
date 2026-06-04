@@ -117,3 +117,20 @@ export const getDate = (req: IncomingMessage) => {
 
   return date;
 };
+
+export const getMonthName = (monthIndex: number) => {
+  return new Date(0, monthIndex).toLocaleString("de-CH", { month: "long" });
+};
+
+export const replacePlaceholders = (
+  template: string,
+  placeholders: Record<string, string>
+) => {
+  let result = template;
+
+  for (const [key, value] of Object.entries(placeholders)) {
+    result = result.replaceAll(`{{${key}}}`, value);
+  }
+
+  return result;
+};

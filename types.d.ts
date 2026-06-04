@@ -39,3 +39,5 @@ export type Invoice = {
   dateDue: Date;
   datePaid?: Date;
 };
+
+export type InvoiceEmail = string;

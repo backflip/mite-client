@@ -4,6 +4,7 @@ import { BlobReader, BlobWriter, ZipWriter } from "@zip.js/zip.js";
 import { Pdf } from "./templates.ts";
 import config from "../../../config.json" with { type: "json" };
 import type { Invoice } from "../../../types.js";
+import { getMonthName } from "../../utils.ts";
 
 export class InvoiceService {
   #apiClient: ApiClient;
@@ -96,7 +97,6 @@ export class InvoiceService {
         .sort((a, b) => b - a)[0] || config.lastInvoiceId;
     const year = new Date().getFullYear();
     const month = new Date().getMonth() - (lastMonth ? 1 : 0);
-    const monthName = this.#getMonthName(month);
 
     const pdfs = await Promise.all(
       Object.values(projects)
@@ -155,14 +155,14 @@ export class InvoiceService {
             invoice,
             project,
             services: invoicedServices,
-            month: monthName,
+            month,
             total,
             vat,
             customer,
             company: config.company,
           });
           const content = await this.#createPdf(markup);
-          const name = `${this.#formatFileNamePart(customer?.name)}_${this.#formatFileNamePart(project.name)}_${this.#formatFileNamePart(monthName)}_${this.#formatFileNamePart(config.company.name)}.pdf`;
+          const name = `${this.#formatFileNamePart(customer?.name)}_${this.#formatFileNamePart(project.name)}_${this.#formatFileNamePart(getMonthName(month))}_${this.#formatFileNamePart(config.company.name)}.pdf`;
 
           return {
             invoice,
@@ -226,9 +226,5 @@ export class InvoiceService {
 
   #formatFileNamePart(part?: string) {
     return part?.replace(/[^a-z0-9]/gi, "") ?? "";
-  }
-
-  #getMonthName(monthIndex: number) {
-    return new Date(0, monthIndex).toLocaleString("de-CH", { month: "long" });
   }
 }

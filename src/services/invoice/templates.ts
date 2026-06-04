@@ -1,6 +1,6 @@
-import type { GetPage, Invoice } from "../../../types.js";
+import type { GetPage, Invoice, InvoiceEmail } from "../../../types.js";
 import type { Project } from "../../mite/types.js";
-import html from "../../utils.ts";
+import html, { getMonthName, replacePlaceholders } from "../../utils.ts";
 import config from "../../../config.json" with { type: "json" };
 import { Icon } from "../../templates/layout.ts";
 
@@ -162,7 +162,7 @@ export const Pdf = ({
     bankAccount: string;
     uid: string;
   };
-  month: string;
+  month: number;
 }) => {
   return html`<!DOCTYPE html>
     <html lang="de">
@@ -204,7 +204,7 @@ export const Pdf = ({
             <dt>Zahlungsfrist</dt>
             <dd>${formatDate(invoice.dateDue)}</dd>
             <dt>Betreff</dt>
-            <dd>${project.name} ${month}</dd>
+            <dd>${project.name} ${getMonthName(month)}</dd>
           </dl>
         </header>
 
@@ -290,6 +290,7 @@ export const Listing: GetPage<{
   invoices: Array<{
     project: Project;
     invoice: Invoice;
+    invoiceEmail: InvoiceEmail | undefined;
   }>;
 }> = async ({ req, routes, props: { invoices } }) => {
   const sortedInvoices = invoices.sort(
@@ -312,43 +313,66 @@ export const Listing: GetPage<{
           <th>Rechnungsdatum</th>
           <th>Zahlungsfrist</th>
           <th>Zahlungseingang</th>
+          <th>E-Mail</th>
         </tr>
       </thead>
       <tbody>
         ${sortedInvoices
-          .map(
-            ({ invoice, project }) =>
-              html`<tr class="${invoice.datePaid ? "" : "unpaid"}">
-                <td>${invoice.id}</td>
-                <td>${project.customer_name} :: ${project.name}</td>
-                <td>CHF ${invoice.amount.toFixed(2)}</td>
-                <td>${formatDate(invoice.dateCreated)}</td>
-                <td>${formatDate(invoice.dateDue)}</td>
-                <td>
-                  ${invoice.datePaid
-                    ? formatDate(invoice.datePaid)
-                    : html`<form
-                        action="/invoice-paid"
-                        method="POST"
-                        class="form form--paid"
-                      >
-                        <input type="hidden" name="id" value="${invoice.id}" />
-                        <div>
-                          <label for="date" class="visually-hidden"
-                            >Datum</label
-                          >
-                          <input type="date" name="date" id="date" />
-                        </div>
-                        <button type="submit">
-                          ${Icon({
-                            icon: "✅",
-                            label: "Bezahlt",
-                          })}
-                        </button>
-                      </form>`}
-                </td>
-              </tr>`
-          )
+          .map(({ invoice, project, invoiceEmail }) => {
+            const monthName = getMonthName(invoice.month);
+            const emailSubject = replacePlaceholders(
+              config.invoiceEmail.subject,
+              {
+                projectName: project.name,
+                monthName,
+              }
+            );
+            const emailBody = replacePlaceholders(config.invoiceEmail.body, {
+              monthName,
+            });
+            const emailLink = invoiceEmail
+              ? `mailto:${invoiceEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+              : null;
+
+            return html`<tr class="${invoice.datePaid ? "" : "unpaid"}">
+              <td>${invoice.id}</td>
+              <td>${project.customer_name} :: ${project.name}</td>
+              <td>CHF ${invoice.amount.toFixed(2)}</td>
+              <td>${formatDate(invoice.dateCreated)}</td>
+              <td>${formatDate(invoice.dateDue)}</td>
+              <td>
+                ${invoice.datePaid
+                  ? formatDate(invoice.datePaid)
+                  : html`<form
+                      action="/invoice-paid"
+                      method="POST"
+                      class="form form--paid"
+                    >
+                      <input type="hidden" name="id" value="${invoice.id}" />
+                      <div>
+                        <label for="date" class="visually-hidden">Datum</label>
+                        <input type="date" name="date" id="date" />
+                      </div>
+                      <button type="submit">
+                        ${Icon({
+                          icon: "✅",
+                          label: "Bezahlt",
+                        })}
+                      </button>
+                    </form>`}
+              </td>
+              <td>
+                ${emailLink && !invoice.datePaid
+                  ? html`<a href="${emailLink}">
+                      ${Icon({
+                        icon: "✉️",
+                        label: "E-Mail senden",
+                      })}
+                    </a>`
+                  : ""}
+              </td>
+            </tr>`;
+          })
           .join("")}
       </tbody>
     </table>`;

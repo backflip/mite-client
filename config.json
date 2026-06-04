@@ -5,6 +5,10 @@
     "bankAccount": "Raiffeisenbank Gossau-Niederwil, CH24 8080 8005 4099 1306 3",
     "uid": "CHE-430.379.404"
   },
+  "invoiceEmail": {
+    "subject": "Rechnung {{projectName}} {{monthName}}",
+    "body": "Hallo\n\nAngehängt die Rechnung für {{monthName}}.\n\nHerzliche Grüsse,\nThomas\n\n\n"
+  },
   "vat": 8.1,
   "lastInvoiceId": 399,
   "invoiceDeadline": 30
