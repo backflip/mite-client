@@ -263,6 +263,7 @@ const routes: Routes = {
       res.writeHead(200, {
         "Content-Type": "text/event-stream",
         Connection: "keep-alive",
+        "Access-Control-Allow-Origin": "*",
       });
 
       update();
