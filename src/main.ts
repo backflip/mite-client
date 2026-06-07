@@ -1,22 +1,45 @@
-import { invoke } from "@tauri-apps/api/core";
+import { TrayIcon, TrayIconEvent } from "@tauri-apps/api/tray";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { moveWindow, Position } from "@tauri-apps/plugin-positioner";
 
-let greetInputEl: HTMLInputElement | null;
-let greetMsgEl: HTMLElement | null;
+const window = getCurrentWindow();
 
-async function greet() {
-  if (greetMsgEl && greetInputEl) {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsgEl.textContent = await invoke("greet", {
-      name: greetInputEl.value,
-    });
-  }
-}
+const tray = await TrayIcon.new({
+  // icon: "../src/assets/sample.png",
+  // iconAsTemplate: true,
+  action: async (event: TrayIconEvent) => {
+    switch (event.type) {
+      case "Click": {
+        if (event.buttonState === "Down") {
+          break;
+        }
 
-window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
-  });
+        if (await window.isVisible()) {
+          window.hide();
+        } else {
+          await window.show();
+          await window.setFocus();
+
+          moveWindow(Position.TrayCenter);
+        }
+
+        break;
+      }
+    }
+  },
 });
+
+const setTrayTitle = () => {
+  const date = new Date();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  tray.setTitle(`●○ 0:${minutes}`);
+};
+
+window.hide();
+
+setTrayTitle();
+
+setInterval(() => {
+  setTrayTitle();
+}, 30000);
