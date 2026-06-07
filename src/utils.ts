@@ -55,8 +55,17 @@ export const requireBasicAuth = (
     throw new Error("process.env.BASIC_AUTH missing");
   }
 
-  const authHeader = req.headers.authorization?.split(/\s+/)[1] || "";
-  const [login, password] = Buffer.from(authHeader, "base64")
+  let authHeader = req.headers.authorization?.split(/\s+/)[1];
+
+  const url = getInternalUrl(req);
+
+  // Allow passing auth via query parameter at event stream endpoint
+  // Safari does not seem to send header in event source requests
+  if (!authHeader && url.pathname === "/tracking") {
+    authHeader = url.searchParams.get("authorization") ?? "";
+  }
+
+  const [login, password] = Buffer.from(authHeader || "", "base64")
     .toString()
     .split(/\:(.*)/);
   const [expectedLogin, expectedPassword] = BASIC_AUTH.split(/\:(.*)/);
