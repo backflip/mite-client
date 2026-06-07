@@ -264,6 +264,7 @@ const routes: Routes = {
         "Content-Type": "text/event-stream",
         Connection: "keep-alive",
         "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization",
       });
 
       update();
