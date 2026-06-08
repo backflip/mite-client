@@ -143,3 +143,6 @@ export const replacePlaceholders = (
 
   return result;
 };
+export const formatAmount = (amount: number) => amount.toFixed(2);
+
+export const formatTotal = (amount: number) => `${amount.toFixed(1)}0`;

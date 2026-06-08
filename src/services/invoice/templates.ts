@@ -1,6 +1,11 @@
 import type { GetPage, Invoice, InvoiceEmail } from "../../../types.js";
 import type { Project } from "../../mite/types.js";
-import html, { getMonthName, replacePlaceholders } from "../../utils.ts";
+import html, {
+  formatAmount,
+  formatTotal,
+  getMonthName,
+  replacePlaceholders,
+} from "../../utils.ts";
 import config from "../../../config.json" with { type: "json" };
 import { Icon } from "../../templates/layout.ts";
 
@@ -224,8 +229,8 @@ export const Pdf = ({
                   html`<tr>
                     <td>${service}</td>
                     <td>${(minutes / 60).toFixed(2)}</td>
-                    <td>CHF ${rate.toFixed(2)}</td>
-                    <td>CHF ${(rate * (minutes / 60)).toFixed(2)}</td>
+                    <td>CHF ${formatAmount(rate)}</td>
+                    <td>CHF ${formatAmount(rate * (minutes / 60))}</td>
                   </tr>`
               )
               .join("")}
@@ -233,15 +238,15 @@ export const Pdf = ({
           <tfoot>
             <tr>
               <th colspan="3">Subtotal</th>
-              <td>CHF ${total.toFixed(2)}</td>
+              <td>CHF ${formatAmount(total)}</td>
             </tr>
             <tr>
               <th colspan="3">MWST (${config.vat}%)</th>
-              <td>CHF ${vat.toFixed(2)}</td>
+              <td>CHF ${formatAmount(vat)}</td>
             </tr>
             <tr>
               <th colspan="3">Gesamttotal</th>
-              <td>CHF ${(total + vat).toFixed(2)}</td>
+              <td>CHF ${formatTotal(total + vat)}</td>
             </tr>
           </tfoot>
         </table>
@@ -337,7 +342,7 @@ export const Listing: GetPage<{
             return html`<tr class="${invoice.datePaid ? "" : "unpaid"}">
               <td>${invoice.id}</td>
               <td>${project.customer_name} :: ${project.name}</td>
-              <td>CHF ${invoice.amount.toFixed(2)}</td>
+              <td>CHF ${formatTotal(invoice.amount)}</td>
               <td>${formatDate(invoice.dateCreated)}</td>
               <td>${formatDate(invoice.dateDue)}</td>
               <td>

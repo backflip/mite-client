@@ -1,4 +1,5 @@
 import type { Invoice, InvoiceEmail } from "../../types.js";
+import { formatAmount } from "../utils.ts";
 import type {
   Customer,
   GroupedTimeEntriesQuery,
@@ -224,8 +225,8 @@ export class ApiClient {
       );
 
     return {
-      weekly: (sumUp(weekly) / 100).toFixed(2),
-      monthly: (sumUp(monthly) / 100).toFixed(2),
+      weekly: formatAmount(sumUp(weekly) / 100),
+      monthly: formatAmount(sumUp(monthly) / 100),
       isTracking: "tracking_time_entry" in currentTracker.tracker,
     };
   }
