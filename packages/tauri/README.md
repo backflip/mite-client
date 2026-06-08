@@ -4,8 +4,14 @@ Tauri wrapper around web app.
 
 ## Dev
 
-`pnpm run tauri dev`
+```sh
+cp .env.template .env
+pnpm ci
+pnpm run tauri dev
+```
 
 ## Build
 
-`pnpm run tauri build -- --bundles app`
+```sh
+pnpm run tauri build -- --bundles app
+```
