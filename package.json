@@ -2,24 +2,6 @@
   "name": "mite-client",
   "version": "0.0.1",
   "author": "Thomas Jaggi <thomas@responsive.ch>",
-  "type": "module",
-  "main": "index.js",
-  "private": true,
-  "license": "UNLICENSED",
-  "scripts": {
-    "start": "node --env-file-if-exists .env src/index.ts",
-    "dev": "node --env-file-if-exists .env --watch src/index.ts",
-    "test": "node --test test",
-    "typecheck": "tsgo",
-    "format": "prettier --write ."
-  },
-  "devDependencies": {
-    "@types/node": "^24.12.4",
-    "@typescript/native-preview": "^7.0.0-dev.20260513.1",
-    "prettier": "^3.8.3"
-  },
-  "dependencies": {
-    "@zip.js/zip.js": "^2.8.26",
-    "puppeteer": "^25.0.2"
-  }
+  "license": "ISC",
+  "packageManager": "pnpm@11.5.2"
 }

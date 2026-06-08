@@ -1,6 +1,8 @@
 # Mite Client
 
-Custom UI for [mite](https://mite.de) to simplify my transition from the [soon-to-be-enshittified](https://www.reddit.com/r/HarvestApp/comments/1q25xpy/purchase_by_bending_spoons/) [harvest](https://www.getharvest.com).
+Custom UI for [mite](https://mite.de) to simplify my transition from the [soon-to-be-enshittified](https://www.reddit.com/r/HarvestApp/comments/1q25xpy/purchase_by_bending_spoons/) [Harvest](https://www.getharvest.com).
+
+I use it as an alternative to [mite.nano](https://mite.de/blog/2021/10/13/mite-nano-app-macos/) because it is missing the possibility to add notes when creating entries. It additionally adds a basic inviocing functionality.
 
 ![Screenshot showing overview page](./docs/screenshot.png)
 
@@ -10,33 +12,12 @@ Features:
 - [Server-sent event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) endpoint for current timer.
 - One-click PDF invoice generation using [Puppeteer](https://pptr.dev).
 - Invoice data persistence in project `note` field.
+- [Tauri](https://tauri.app) wrapper to use as menubar app.
 
-The goal is to use it for a minimal [Tauri](https://tauri.app) menubar app because [mite.nano](https://mite.de/blog/2021/10/13/mite-nano-app-macos/) is missing the possibility to add notes.
+## Packages
 
-## Setup
-
-### Prod
-
-```sh
-MITE_API_KEY=key MITE_ACCOUNT_NAME=name BASIC_AUTH=user:pass npm start
-```
-
-### Dev
-
-```sh
-cp .env.template .env
-npm ci
-npx puppeteer browsers install chrome
-npm run dev
-```
-
-### Deployment
-
-```sh
-fly deploy
-```
-
-`Dockerfile` is auto-generated via `npx @flydotio/dockerfile@latest`.
+- [`packages/client`](./packages/client): Client application
+- [`packages/tauri`](./packages/tauri): Tauri menubar app
 
 ## Notes
 

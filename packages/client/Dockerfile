@@ -20,13 +20,19 @@ FROM base AS build
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
 
-# Install node modules
-COPY .npmrc package-lock.json package.json ./
-RUN npm ci
+# Set up pnpm using corepack, read version from package.json
+COPY package.json ./
+RUN corepack enable && \
+    groupadd -r nodeuser && useradd -r -g nodeuser -m -d /home/nodeuser nodeuser
+
+# Copy lockfile, workspace definitions and root package.json for Docker cache efficiency
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .
 
 # Copy application code
-COPY . .
+COPY packages/client .
 
+# Install dependencies
+RUN pnpm install --filter client
 
 # Final stage for app image
 FROM base
@@ -42,4 +48,4 @@ COPY --from=build /app /app
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
 ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
-CMD [ "npm", "run", "start" ]
+CMD [ "npm", "start" ]
