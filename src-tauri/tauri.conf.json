@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "mite-client",
+  "productName": "Mite Client",
   "version": "0.1.0",
   "identifier": "com.me.mite-client",
   "build": {
