@@ -1,11 +1,11 @@
 {
-  "name": "@mite-client/client",
+  "name": "@responsive.ch/mite-client-app",
+  "private": true,
   "version": "0.0.1",
   "author": "Thomas Jaggi <thomas@responsive.ch>",
+  "license": "ISC",
   "type": "module",
   "main": "index.js",
-  "private": true,
-  "license": "ISC",
   "scripts": {
     "start": "node --env-file-if-exists .env src/index.ts",
     "dev": "node --env-file-if-exists .env --watch src/index.ts",

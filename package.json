@@ -1,5 +1,6 @@
 {
-  "name": "mite-client",
+  "name": "@responsive.ch/mite-client",
+  "private": true,
   "version": "0.0.1",
   "author": "Thomas Jaggi <thomas@responsive.ch>",
   "license": "ISC",
