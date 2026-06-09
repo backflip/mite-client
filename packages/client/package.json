@@ -14,12 +14,12 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@types/node": "^24.12.4",
-    "@typescript/native-preview": "7.0.0-dev.20260607.1",
+    "@types/node": "^24.13.1",
+    "@typescript/native-preview": "7.0.0-dev.20260608.1",
     "prettier": "^3.8.3"
   },
   "dependencies": {
     "@zip.js/zip.js": "^2.8.26",
-    "puppeteer": "^25.0.2"
+    "puppeteer": "^25.1.0"
   }
 }
