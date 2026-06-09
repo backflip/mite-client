@@ -55,7 +55,9 @@ const initTray = async () => {
           }
 
           if (await window.isVisible()) {
-            window.hide();
+            render();
+
+            await window.hide();
           } else {
             await window.show();
             await window.setFocus();
@@ -107,9 +109,8 @@ const watchTracker = async () => {
   });
 };
 
-const render = () => {
-  watchTracker();
-  insertIframe();
+const render = async () => {
+  await Promise.all([watchTracker(), insertIframe()]);
 };
 
 const init = async () => {
