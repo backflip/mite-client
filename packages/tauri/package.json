@@ -1,7 +1,9 @@
 {
-  "name": "@mite-client/tauri",
+  "name": "@responsive.ch/mite-client-tauri",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.1",
+  "author": "Thomas Jaggi <thomas@responsive.ch>",
+  "license": "ISC",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +14,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-positioner": "~2.3.2"
+    "@tauri-apps/plugin-positioner": "~2.3.2",
+    "@tauri-apps/plugin-process": "~2.3.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

@@ -1,6 +1,8 @@
+import { Menu } from "@tauri-apps/api/menu";
 import { TrayIcon, TrayIconEvent } from "@tauri-apps/api/tray";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { moveWindow, Position } from "@tauri-apps/plugin-positioner";
+import { exit } from "@tauri-apps/plugin-process";
 
 const { VITE_IFRAME_URL } = import.meta.env;
 
@@ -8,17 +10,42 @@ if (!VITE_IFRAME_URL) {
   throw new Error("VITE_IFRAME_URL is not defined");
 }
 
+let tray: TrayIcon | undefined;
+let iframe: HTMLIFrameElement | undefined;
+let eventSource: EventSource | undefined;
+
 const window = getCurrentWindow();
 
 const insertIframe = () => {
-  const iframe = document.createElement("iframe");
+  if (iframe) {
+    iframe.remove();
+  }
 
+  iframe = document.createElement("iframe");
   iframe.src = VITE_IFRAME_URL;
 
   document.body.appendChild(iframe);
 };
 
 const initTray = async () => {
+  const menu = await Menu.new({
+    items: [
+      {
+        id: "reload",
+        text: "Reload",
+        action() {
+          render();
+        },
+      },
+      {
+        id: "quit",
+        text: "Quit",
+        async action() {
+          await exit(0);
+        },
+      },
+    ],
+  });
   const tray = await TrayIcon.new({
     action: async (event: TrayIconEvent) => {
       switch (event.type) {
@@ -40,6 +67,9 @@ const initTray = async () => {
         }
       }
     },
+    menu,
+    showMenuOnLeftClick: false,
+    title: `○`,
   });
 
   return tray;
@@ -55,27 +85,37 @@ const getEventSourceUrl = () => {
   return url.toString();
 };
 
-const watchTracker = async (tray: TrayIcon) => {
+const watchTracker = async () => {
+  if (!tray) {
+    return;
+  }
+
   const url = getEventSourceUrl();
-  const eventSource = new EventSource(url);
+
+  if (eventSource) {
+    eventSource.close();
+  }
+
+  eventSource = new EventSource(url);
 
   eventSource.addEventListener("message", (event) => {
     if (event.data !== "0:00") {
-      tray.setTitle(`● ${event.data}`);
+      tray!.setTitle(`● ${event.data}`);
     } else {
-      tray.setTitle(`○`);
+      tray!.setTitle(`○`);
     }
   });
 };
 
-const init = async () => {
-  const tray = await initTray();
-
-  tray.setTitle(`○`);
-
-  watchTracker(tray);
-
+const render = () => {
+  watchTracker();
   insertIframe();
+};
+
+const init = async () => {
+  tray = await initTray();
+
+  render();
 
   window.hide();
 };
