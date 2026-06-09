@@ -22,17 +22,14 @@ RUN apt-get update -qq && \
 
 # Set up pnpm using corepack, read version from package.json
 COPY package.json ./
-RUN corepack enable && \
-    groupadd -r nodeuser && useradd -r -g nodeuser -m -d /home/nodeuser nodeuser
+RUN corepack enable
 
-# Copy lockfile, workspace definitions and root package.json for Docker cache efficiency
+# Copy files
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .
+COPY packages/client ./packages/client
 
-# Copy application code
-COPY packages/client .
-
-# Install dependencies
-RUN pnpm install --filter client
+# Create deployable build
+RUN pnpm deploy --filter @responsive.ch/mite-client-app --prod build
 
 # Final stage for app image
 FROM base
@@ -43,7 +40,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Copy built application
-COPY --from=build /app /app
+COPY --from=build /app/build /app
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
