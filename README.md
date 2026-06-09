@@ -25,3 +25,4 @@ Features:
 - Expects Mite service names to use the following pattern: `Customer Name :: Project Name :: Service Name`. This allos me to have project-specific services rather than being able to use the same service in multiple projects.
 - Persists project invoice data as stringified JSON to a project's `note` field:
   ![Screenshot of mite admin UI showing JSON in note field](./docs/screenshot-06.png)
+- [Window positioning](https://v2.tauri.app/plugin/positioner/) relative to menubar icon is unreliable. Requires multiple show/hide actions in some cases. Menubar icon position seems to be unkown for quite some time.
