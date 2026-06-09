@@ -24,10 +24,13 @@ const styles = html`<style>
     --color-active: light-dark(rgb(230 230 250), rgb(40 40 60));
     --color-delete: light-dark(rgb(250 230 230), rgb(60 40 40));
 
+    --font-size-table: 0.8rem;
+
     color-scheme: light dark;
 
     @media (min-width: 40rem) {
       --page-padding: 1rem;
+      --font-size-table: 1rem;
     }
   }
 
@@ -74,6 +77,7 @@ const styles = html`<style>
   table {
     width: 100%;
     border-collapse: collapse;
+    font-size: var(--font-size-table);
 
     th,
     td {
