@@ -8,3 +8,9 @@ iframe {
   width: 100vw;
   height: 100vh;
 }
+
+button {
+  position: fixed;
+  inset-block-end: 0.5rem;
+  inset-inline-end: 0.5rem;
+}

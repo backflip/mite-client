@@ -12,6 +12,7 @@ if (!VITE_IFRAME_URL) {
 
 let tray: TrayIcon | undefined;
 let iframe: HTMLIFrameElement | undefined;
+let reloadButton: HTMLButtonElement | undefined;
 let eventSource: EventSource | undefined;
 
 const window = getCurrentWindow();
@@ -25,6 +26,21 @@ const insertIframe = () => {
   iframe.src = VITE_IFRAME_URL;
 
   document.body.appendChild(iframe);
+};
+
+const insertReloadButton = () => {
+  if (reloadButton) {
+    reloadButton.remove();
+  }
+
+  reloadButton = document.createElement("button");
+  reloadButton.textContent = "⟳";
+
+  document.body.appendChild(reloadButton);
+
+  reloadButton.addEventListener("click", () => {
+    render();
+  });
 };
 
 const initTray = async () => {
@@ -115,6 +131,7 @@ const init = async () => {
   tray = await initTray();
 
   render();
+  insertReloadButton();
 
   window.hide();
 };
