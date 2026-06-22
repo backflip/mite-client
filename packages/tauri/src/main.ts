@@ -55,8 +55,6 @@ const initTray = async () => {
           }
 
           if (await window.isVisible()) {
-            render();
-
             await window.hide();
           } else {
             await window.show();
