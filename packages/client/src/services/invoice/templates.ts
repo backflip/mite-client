@@ -153,7 +153,7 @@ export const Pdf = ({
   services,
   customer,
   company,
-  month,
+  monthSuffix,
 }: {
   project: Project;
   invoice: Invoice;
@@ -167,7 +167,7 @@ export const Pdf = ({
     bankAccount: string;
     uid: string;
   };
-  month: number;
+  monthSuffix: boolean | undefined;
 }) => {
   return html`<!DOCTYPE html>
     <html lang="de">
@@ -209,7 +209,9 @@ export const Pdf = ({
             <dt>Zahlungsfrist</dt>
             <dd>${formatDate(invoice.dateDue)}</dd>
             <dt>Betreff</dt>
-            <dd>${project.name} ${getMonthName(month)}</dd>
+            <dd>
+              ${project.name} ${monthSuffix ? getMonthName(invoice.month) : ""}
+            </dd>
           </dl>
         </header>
 
@@ -309,6 +311,7 @@ export const Listing: GetPage<{
     project: Project;
     invoice: Invoice;
     invoiceEmail: InvoiceEmail | undefined;
+    invoiceMonthSuffix: boolean | undefined;
   }>;
 }> = async ({ req, routes, props: { invoices } }) => {
   const sortedInvoices = invoices.sort(
@@ -336,8 +339,10 @@ export const Listing: GetPage<{
       </thead>
       <tbody>
         ${sortedInvoices
-          .map(({ invoice, project, invoiceEmail }) => {
-            const monthName = getMonthName(invoice.month);
+          .map(({ invoice, project, invoiceEmail, invoiceMonthSuffix }) => {
+            const monthName = invoiceMonthSuffix
+              ? getMonthName(invoice.month)
+              : "";
             const emailSubject = replacePlaceholders(
               config.invoiceEmail.subject,
               {

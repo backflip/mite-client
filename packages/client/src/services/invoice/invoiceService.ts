@@ -124,6 +124,9 @@ export class InvoiceService {
             throw new Error("Customer or project not found");
           }
 
+          const { invoiceMonthSuffix } = this.#apiClient.parseProjectNote(
+            project.note
+          );
           const id = lastId + index + 1;
           const dateCreated = new Date();
           const dateDue = this.getDueDate(dateCreated);
@@ -155,14 +158,14 @@ export class InvoiceService {
             invoice,
             project,
             services: invoicedServices,
-            month,
+            monthSuffix: invoiceMonthSuffix,
             total,
             vat,
             customer,
             company: config.company,
           });
           const content = await this.#createPdf(markup);
-          const name = `${this.#formatFileNamePart(customer?.name)}_${this.#formatFileNamePart(project.name)}_${this.#formatFileNamePart(getMonthName(month))}_${this.#formatFileNamePart(config.company.name)}.pdf`;
+          const name = `${this.#formatFileNamePart(customer?.name)}_${this.#formatFileNamePart(project.name)}${invoiceMonthSuffix ? `_${this.#formatFileNamePart(getMonthName(month))}` : ""}_${this.#formatFileNamePart(config.company.name)}.pdf`;
 
           return {
             invoice,
@@ -225,6 +228,6 @@ export class InvoiceService {
   }
 
   #formatFileNamePart(part?: string) {
-    return part?.replace(/[^a-z0-9]/gi, "") ?? "";
+    return part?.replace(/[^\p{Letter}0-9]/giu, "") ?? "";
   }
 }

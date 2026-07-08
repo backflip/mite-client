@@ -236,7 +236,7 @@ export class ApiClient {
     const invoices = [];
 
     for (const project of projects) {
-      const parsedNote = this.#parseProjectNote(project.project.note);
+      const parsedNote = this.parseProjectNote(project.project.note);
 
       invoices.push(
         ...parsedNote.invoices.map((invoice) => ({
@@ -248,6 +248,7 @@ export class ApiClient {
           } as Invoice,
           project: project.project,
           invoiceEmail: parsedNote.invoiceEmail,
+          invoiceMonthSuffix: parsedNote.invoiceMonthSuffix,
         }))
       );
     }
@@ -273,7 +274,7 @@ export class ApiClient {
       throw new Error(`Invoice with ID ${invoice.id} already exists`);
     }
 
-    const parsedNote = this.#parseProjectNote(project!.project.note);
+    const parsedNote = this.parseProjectNote(project!.project.note);
     const note = {
       ...parsedNote,
       invoices: parsedNote.invoices.concat([invoice]),
@@ -309,7 +310,7 @@ export class ApiClient {
       );
     }
 
-    const parsedNote = this.#parseProjectNote(invoice.project.note);
+    const parsedNote = this.parseProjectNote(invoice.project.note);
     const note = {
       ...parsedNote,
       invoices: parsedNote.invoices.map((existingInvoice) => {
@@ -342,7 +343,7 @@ export class ApiClient {
       throw new Error(`Invoice with ID ${invoiceId} not found`);
     }
 
-    const parsedNote = this.#parseProjectNote(invoice.project.note);
+    const parsedNote = this.parseProjectNote(invoice.project.note);
     const note = {
       ...parsedNote,
       invoices: parsedNote.invoices.filter(
@@ -358,9 +359,10 @@ export class ApiClient {
     }) as Promise<null>;
   }
 
-  #parseProjectNote(note: string): {
+  parseProjectNote(note: string): {
     invoices: Invoice[];
     invoiceEmail?: InvoiceEmail;
+    invoiceMonthSuffix?: boolean;
   } {
     const parsed = JSON.parse(note || "{}");
 
