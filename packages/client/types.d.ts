@@ -12,6 +12,7 @@ export type Routes = {
   invoices: Route;
   invoice: Route;
   invoicePaid: Route;
+  invoiceDelete: Route;
   total: Route;
   tracking: Route;
 };

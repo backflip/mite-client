@@ -218,6 +218,31 @@ const routes: Routes = {
       res.end();
     },
   },
+  invoiceDelete: {
+    path: "/invoice-delete",
+    async handler(req: IncomingMessage, res: ServerResponse) {
+      if (req.method !== "POST") {
+        throw new Error("Method Not Allowed");
+      }
+
+      const params = await parseBody(req);
+      const invoiceId = params.get("id");
+
+      if (!invoiceId) {
+        throw new Error(`Missing "id"`);
+      }
+
+      const datePaidInput = params.get("date");
+      const datePaid = datePaidInput ? new Date(datePaidInput) : new Date();
+
+      await apiClient.deleteInvoice({
+        invoiceId: Number(invoiceId),
+      });
+
+      res.writeHead(302, { location: routes.invoices.path });
+      res.end();
+    },
+  },
   total: {
     path: "/total",
     async handler(req: IncomingMessage, res: ServerResponse) {

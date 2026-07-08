@@ -128,14 +128,6 @@ const styles = html`<style>
       gap: 0.25rem;
     }
 
-    .action--invoice {
-      background: transparent;
-      appearance: none;
-      border: 0;
-      padding: 0;
-      width: auto;
-    }
-
     .revenue {
       color: var(--color-text-mute);
       font-size: 0.7rem;
@@ -223,7 +215,7 @@ const scripts = html`<script type="module">
 
         break;
       case "i":
-        const invoiceButton = document.querySelector(".action--invoice");
+        const invoiceButton = document.querySelector(".link--invoice");
 
         if (invoiceButton) {
           invoiceButton.click();

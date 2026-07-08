@@ -289,6 +289,19 @@ const listingStyles = html`<style>
       border-top-left-radius: 0;
     }
   }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .action--invoice {
+    background: transparent;
+    appearance: none;
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
 </style>`;
 
 export const Listing: GetPage<{
@@ -318,7 +331,7 @@ export const Listing: GetPage<{
           <th>Rechnungsdatum</th>
           <th>Zahlungsfrist</th>
           <th>Zahlungseingang</th>
-          <th>E-Mail</th>
+          <th>Aktionen</th>
         </tr>
       </thead>
       <tbody>
@@ -349,7 +362,7 @@ export const Listing: GetPage<{
                 ${invoice.datePaid
                   ? formatDate(invoice.datePaid)
                   : html`<form
-                      action="/invoice-paid"
+                      action="${routes.invoicePaid.path}"
                       method="POST"
                       class="form form--paid"
                     >
@@ -367,14 +380,22 @@ export const Listing: GetPage<{
                     </form>`}
               </td>
               <td>
-                ${emailLink && !invoice.datePaid
-                  ? html`<a href="${emailLink}">
-                      ${Icon({
-                        icon: "✉️",
-                        label: "E-Mail senden",
-                      })}
-                    </a>`
-                  : ""}
+                <div class="actions">
+                  <form action="${routes.invoiceDelete.path}" method="POST">
+                    <input type="hidden" name="id" value="${invoice.id}" />
+                    <button type="submit" class="action action--invoice">
+                      ${Icon({ icon: "🗑️", label: "Löschen" })}
+                    </button>
+                  </form>
+                  ${emailLink && !invoice.datePaid
+                    ? html`<a href="${emailLink}">
+                        ${Icon({
+                          icon: "✉️",
+                          label: "E-Mail senden",
+                        })}
+                      </a>`
+                    : ""}
+                </div>
               </td>
             </tr>`;
           })

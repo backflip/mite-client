@@ -332,6 +332,32 @@ export class ApiClient {
     }) as Promise<null>;
   }
 
+  async deleteInvoice({ invoiceId }: { invoiceId: Invoice["id"] }) {
+    const invoices = await this.getInvoices();
+    const invoice = invoices.find(
+      (existingInvoice) => existingInvoice.invoice.id === invoiceId
+    );
+
+    if (!invoice) {
+      throw new Error(`Invoice with ID ${invoiceId} not found`);
+    }
+
+    const parsedNote = this.#parseProjectNote(invoice.project.note);
+    const note = {
+      ...parsedNote,
+      invoices: parsedNote.invoices.filter(
+        (existingInvoice) => existingInvoice.id !== invoiceId
+      ),
+    };
+
+    return this.fetch(`projects/${invoice.project.id}.json`, {
+      method: "PATCH",
+      body: {
+        note: JSON.stringify(note, null, "\t"),
+      },
+    }) as Promise<null>;
+  }
+
   #parseProjectNote(note: string): {
     invoices: Invoice[];
     invoiceEmail?: InvoiceEmail;
