@@ -1,12 +1,10 @@
-# fly.toml app configuration file generated for mite-client on 2026-05-19T10:13:50+02:00
+# fly.toml app configuration file generated for mite-client on 2026-08-03T09:00:06+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = 'mite-client'
-primary_region = 'fra'
-
-[build]
+primary_region = 'ams'
 
 [http_service]
   internal_port = 3000
@@ -17,7 +15,5 @@ primary_region = 'fra'
   processes = ['app']
 
 [[vm]]
-  memory = '1gb'
   cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 1024
+  memory_mb = 2048
