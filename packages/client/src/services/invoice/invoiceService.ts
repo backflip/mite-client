@@ -17,7 +17,7 @@ export class InvoiceService {
     const lastMonth = new Date().getDate() < 15;
 
     const query = {
-      at: lastMonth ? "last_month" : "this_month",
+      at: lastMonth ? "last_month" : "this_month", // Manually set to `this_year` to invoice old entries
       group_by: "service" as const,
     };
 
