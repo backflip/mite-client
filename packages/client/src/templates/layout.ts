@@ -55,6 +55,15 @@ const styles = html`<style>
     color: inherit;
   }
 
+  /* Prevent Safari from hiding default dropdown UI */
+  @supports (font: -apple-system-body) {
+    input[list] {
+      border: revert;
+      border-radius: revert;
+      background: revert;
+    }
+  }
+
   button {
     padding-block: 0;
     cursor: pointer;
