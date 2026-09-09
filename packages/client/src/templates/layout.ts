@@ -55,12 +55,14 @@ const styles = html`<style>
     color: inherit;
   }
 
-  /* Prevent Safari from hiding default dropdown UI */
+  /* Prevent Mobile Safari from hiding default dropdown UI */
   @supports (font: -apple-system-body) {
-    input[list] {
-      border: revert;
-      border-radius: revert;
-      background: revert;
+    @media (hover: none) {
+      input[list] {
+        border: revert;
+        border-radius: revert;
+        background: revert;
+      }
     }
   }
 
