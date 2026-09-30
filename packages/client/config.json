@@ -7,7 +7,7 @@
   },
   "invoiceEmail": {
     "subject": "Rechnung {{projectName}} {{monthName}}",
-    "body": "Hallo\n\nAngehängt die Rechnung für {{monthName}}.\n\nHerzliche Grüsse,\nThomas\n\n\n"
+    "body": "Hallo zusammen\n\nAngehängt die Rechnung für {{monthName}}.\n\nHerzliche Grüsse,\nThomas\n\n\n"
   },
   "vat": 8.1,
   "lastInvoiceId": 399,
