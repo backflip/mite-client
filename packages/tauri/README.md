@@ -13,5 +13,5 @@ pnpm run tauri dev
 ## Build
 
 ```sh
-pnpm run tauri build -- --bundles app
+pnpm run tauri build
 ```
