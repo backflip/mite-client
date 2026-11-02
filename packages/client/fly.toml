@@ -16,4 +16,4 @@ primary_region = 'ams'
 
 [[vm]]
   cpu_kind = 'shared'
-  memory_mb = 2048
+  memory_mb = 256
